@@ -31,16 +31,25 @@ What we know isn't right yet, or hasn't been tried. Worth reading before a churc
   itself is gone. A **Restart** button (next to Stop, for the sound person) starts the hearing
   afresh at once, finishes the words heard so far as lines first, and swaps in a new sound
   input when it has opened (it can take a second or two; if it won't open, the old one carries
-  on). The screen keeps its lines. It can't free a speech pass that has hung; that needs the
-  supervisor below. Tests inject faults into every stage, including a
-  ten-minute random-fault run. Not covered yet: a hard crash of the whole process (a
-  segfault, the system killing it) and a speech pass that hangs instead of failing; those
-  need a supervisor that relaunches the app. Fixed builds write `riah-translate.log` next to
-  the models (`~/Library/Application Support/Riah Translate` on a Mac) so any future failure
-  leaves its traceback on disk. The preacher's Mac build predates all of this.
-- Crash reports are off unless someone ticks "Send crash reports to Riah Studio" under More
-  settings on that computer: then the app sends only what broke and when (never sound, words,
-  notes or anything typed), so the studio can see a new kind of crash without logging in.
+  on). The screen keeps its lines. The speech engine runs in its own process, watched by the app:
+  if it crashes outright (a segfault, the system ending it) or stops turning for 10 s (a speech
+  pass that hangs), the app ends it, starts a new one and carries on the same service: the screen
+  keeps its lines and the numbering carries on (it takes as long as loading the models, about 30
+  s on a 4-core test machine, longer on a slow laptop). Silence and mumbling never count as a
+  hang: the engine reports that its loop is turning, not that someone is talking. If Restart is
+  ignored the app swaps the engine after 4 s; if Stop can't get an answer it ends the engine
+  after 6 s. A process that keeps crashing is restarted with growing pauses (up to 15 s), never
+  in a tight loop. If a second process can't be started on that computer, the engine runs inside
+  the app as before (`--no-isolate` does that on purpose). Tests inject faults into every stage,
+  including a ten-minute random-fault run and `tests/test_isolate.py` (crash, hang, silence, a
+  Restart or Stop that gets no answer, crash loop). The app itself crashing (not the engine) still
+  needs a relaunch by hand; the log is `riah-translate.log` (engine: `riah-engine.log`) next to
+  the models (`~/Library/Application Support/Riah Translate` on a Mac) so any failure leaves its
+  traceback on disk. The preacher's Mac build predates all of this.
+- Problem reports are sent by the person, never automatically: after a problem the app offers
+  **Send a problem report**, shows exactly what would go (what broke and when; never sound, words,
+  notes or anything typed), and sends it to riahstudio.com on their click. If they are offline it
+  saves a small file they can send later. Nothing is sent without that click.
 
 - The Mac and Windows builds are not signed yet. macOS and Windows both warn on first open; the
   Sunday checklist says how to get past it.

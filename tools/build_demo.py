@@ -95,7 +95,7 @@ def main(run_path, out, name=APP_NAME):
     html = html.replace(initials(APP_NAME) + " · ", initials(name) + " · ")
     open(os.path.join(scr, "screen.html"), "w", encoding="utf-8", newline="\n").write(html)
 
-    for f in ("demo.css", "demo.js"):
+    for f in ("demo.css", "demo.js", "get.js"):
         shutil.copy2(os.path.join(DEMO, f), out)
     page = open(os.path.join(DEMO, "index.html"), encoding="utf-8").read()
     page = page.replace("{{bible_count}}", bible_count())

@@ -25,9 +25,10 @@ of it. "Send a problem report" (More settings) shows that list in plain words, a
 it. When the send doesn't go through, the same text is saved as a file (Downloads) for the person
 to email or message to the studio.
 
-No key, and nothing to set up (Captain, 2026-11-27): every build can send. The studio takes a small,
-size-capped, rate-limited report from anyone and rebuilds each field from a fixed list, the way an
-error tracker's public write key works.
+No key, and nothing to set up (Captain, 2026-11-27): every build can send. A person's report goes to
+the studio's own "talk to us" form (riahstudio.com/api/talk), the same as a contact form on any
+site: it is emailed to the studio, size-capped and rate-limited. The tick-box that sent reports on
+its own is gone (Captain: reports are something the user sends); the code for it stays dormant.
 
 Sending can never touch the service: a small queue, one background thread, a 5-second timeout,
 and anything that goes wrong is dropped.
@@ -51,6 +52,10 @@ from pathlib import Path
 from . import __version__
 
 URL = os.environ.get("RIAH_TRANSLATE_REPORT_URL") or ""
+# A person's problem report goes to the studio's own "talk to us" form (riahstudio.com/talk), which
+# emails it: the same thing a contact form does. Nothing to set up and no key (Captain, 2026-11-27).
+TALK_URL = os.environ.get("RIAH_TRANSLATE_TALK_URL") or "https://riahstudio.com/api/talk"
+TALK_MAX = 1800              # the form keeps 2000 characters
 
 WAIT_BACK_SEC = 120          # a restart waits this long to say "and it's back up" in the same report
 TIMEOUT = 5                  # seconds; a report that can't go out in time is dropped
@@ -312,7 +317,9 @@ class Reporter:
         self.url = url
         self.send = send or (lambda payload: post(self.url, payload))
         # A person's report: True only if the studio took it (then it reached Zach).
-        self.send_user = send_user or (lambda payload: post(self.url, payload, timeout=USER_TIMEOUT, want_ok=True))
+        self.send_user = send_user or (lambda payload: post(
+            TALK_URL, {"message": problem_text(payload), "show": "Riah Church Translate app", "website": ""},
+            timeout=USER_TIMEOUT, want_ok=True))
         self.clock = clock
         self.on = False
         self.folder: Path | None = None
@@ -440,11 +447,12 @@ class Reporter:
         except Exception:
             pass
 
-    def event(self, kind: str, exc: BaseException | None = None, recovered: bool | None = None):
+    def event(self, kind: str, exc: BaseException | None = None, recovered: bool | None = None, parts=None):
         """A failure: bad_pass (recovered=True: the service kept going), restart, crash. Always added to
-        this computer's own list; sent only when reports are on."""
+        this computer's own list; sent only when reports are on. `parts` is (error type, frames) for a
+        failure that happened in the engine's own process, where there is no exception object here."""
         try:
-            p = self.payload(kind, exc, recovered)
+            p = self.payload(kind, exc, recovered, parts)
             self._note(p)
         except Exception:
             return
@@ -477,12 +485,19 @@ class Reporter:
             pass
 
     # ------------------------------------------------------------------ building a report
-    def payload(self, kind: str, exc: BaseException | None = None, recovered: bool | None = None) -> dict:
+    def payload(self, kind: str, exc: BaseException | None = None, recovered: bool | None = None,
+                parts=None) -> dict:
         p = dict(v=1, kind=kind, app=__version__, platform=platform_name(), install=self.install,
                  live=bool(self.live), at=now_iso())
         if exc is not None:
             p["exc"] = exc_name(exc)
             p["frames"] = frames(exc.__traceback__)
+        elif parts:
+            name, where_ = parts
+            if isinstance(name, str) and re.fullmatch(r"[A-Za-z0-9_.]{1,100}", name):
+                p["exc"] = name
+            p["frames"] = [f for f in (where_ or []) if isinstance(f, str) and len(f) <= 90
+                           and _FRAME.fullmatch(f)][-MAX_FRAMES:]
         if recovered is not None:
             p["recovered"] = bool(recovered)
         return p
@@ -610,7 +625,8 @@ class Reporter:
                 e["frames"] = list(e["frames"])[-REPORT_FRAMES:]
         p = dict(v=1, kind="user", app=__version__, platform=platform_name(), install=self.install,
                  live=bool(self.live), at=now_iso(), problems=items)
-        while items and len(json.dumps(p, separators=(",", ":"))) > REPORT_MAX_BYTES:
+        while items and (len(json.dumps(p, separators=(",", ":"))) > REPORT_MAX_BYTES
+                         or len(problem_text(p)) > TALK_MAX):
             items.pop()
         return p
 
@@ -789,8 +805,8 @@ def status(state):
     _reporter.status(state)
 
 
-def event(kind, exc=None, recovered=None):
-    _reporter.event(kind, exc, recovered)
+def event(kind, exc=None, recovered=None, parts=None):
+    _reporter.event(kind, exc, recovered, parts)
 
 
 def closing():

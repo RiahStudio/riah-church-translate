@@ -1,5 +1,11 @@
 """Entry point for the packaged app (PyInstaller). Same as `python -m riah_translate`."""
+import multiprocessing
 import sys
+
+# The speech engine runs in a second process of this same program (riah_translate/isolate.py). That
+# process starts here too, and this line must come first: it turns the process into the engine instead
+# of a second app, before anything below (the log file, the windows) runs.
+multiprocessing.freeze_support()
 
 # Every platform writes a log next to the models (2026-11-26: a Mac dropped out of the live
 # screen mid-sermon and there was nothing on disk to say why - a Mac app's stdout goes

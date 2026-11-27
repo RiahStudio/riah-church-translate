@@ -34,6 +34,20 @@
 
     <h1>Live Thai subtitles for an English sermon.</h1>
 
+    <section class="get" aria-label="Download the app">
+      <a class="riah-button riah-button--primary get-main" id="get-main" href="#get-other" hidden>Download</a>
+      <p class="get-note" id="get-note" aria-live="polite"></p>
+      <details class="get-other" id="get-other" open>
+        <summary>All downloads</summary>
+        <ul>
+          <li><a href="https://github.com/RiahStudio/riah-church-translate/releases/latest/download/Riah-Church-Translate-windows.zip">Windows</a></li>
+          <li><a href="https://github.com/RiahStudio/riah-church-translate/releases/latest/download/Riah-Church-Translate-mac.zip">Mac with an Apple chip</a> (2020 or newer)</li>
+          <li><a href="https://github.com/RiahStudio/riah-church-translate/releases/latest/download/Riah-Church-Translate-mac-intel.zip">Mac with an Intel chip</a></li>
+        </ul>
+        <p>Not signed yet, so the first open asks you to confirm: <a href="https://github.com/RiahStudio/riah-church-translate/blob/main/SUNDAY-CHECKLIST.md">the steps are here</a>.</p>
+      </details>
+    </section>
+
     <section class="player" id="player" aria-label="Demo of the church screen">
       <div class="frame">
         <iframe id="screen" src="screen/screen.html" title="The church screen, playing a recorded test sermon"></iframe>
@@ -53,10 +67,11 @@
 
     <ul class="rows" aria-label="About the app">
       <li><span class="riah-label">Try it</span><span>In Chrome or Edge, free, for English sermons.</span></li>
-      <li><span class="riah-label">App</span><span>For the church's Mac or Windows PC. In testing now.</span></li>
+      <li><span class="riah-label">App</span><span>Free and open source, for the church's Mac or Windows PC. The button at the top picks the right one.</span></li>
       <li><span class="riah-label">Offline</span><span>The app needs no internet during the service.</span></li>
       <li><span class="riah-label">Slides</span><span>The app can sit as a bar under the slides.</span></li>
       <li><span class="riah-label">Sound</span><span>The sound desk's USB, or any microphone.</span></li>
+      <li><span class="riah-label">Stuck</span><span>Press Restart next to Stop. Still wrong: More settings, then Send a problem report.</span></li>
       <li><span class="riah-label">Notes</span><span>Add sermon notes and it listens for the names in them.</span></li>
       <li><span class="riah-label">Quality</span><span>Machine translation: good to follow along, not word-perfect.</span></li>
     </ul>
@@ -64,6 +79,7 @@
 
   <footer class="riah-fine">Made by <a href="https://riahstudio.com/">Riah Studio</a></footer>
 </div>
+<script src="get.js"></script>
 <script src="demo.js"></script>
 </body>
 </html>

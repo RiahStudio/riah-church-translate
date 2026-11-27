@@ -694,6 +694,23 @@ def test_a_repeating_problem_stays_one_line():
     assert len(calls) == 1 and [o["sent"] for o in outs] == [True, True], (calls, outs)
 
 
+def test_a_report_from_the_engine_process_carries_only_a_name_and_file_lines():
+    """The engine process sends the error's type name and file:line frames; anything else it tries to
+    send (a folder, a message, a long string) is dropped."""
+    r, _ = quiet()
+    r.install = "a1b2c3d4e5f6"
+    p = r.payload("crash", parts=("RuntimeError", ["engine.py:120", "isolate.py:88"]), recovered=True)
+    assert p["exc"] == "RuntimeError" and p["frames"] == ["engine.py:120", "isolate.py:88"], p
+    assert set(p) <= ALLOWED, p
+    bad = r.payload("crash", parts=("Boom: John said hi", ["/Users/john/secret.py:3", "C:\\x\\y.py:2",
+                                                           "x" * 200, "ok.py:7"]))
+    text = json.dumps(bad)
+    assert "exc" not in bad and bad["frames"] == ["ok.py:7"], bad
+    for secret in ("John", "Users", "secret", "\\"):
+        assert secret not in text, (secret, text)
+    assert r.payload("crash", parts=None).get("frames") is None
+
+
 if __name__ == "__main__":
     tests =[(k, v) for k, v in list(globals().items()) if k.startswith("test_")]
     for name, fn in tests:

@@ -10,6 +10,7 @@ run() { name="$1"; shift; echo; echo "=== $name ==="; "$PY" tests/clip_test.py "
 HINTS="Chiang Mai, Nicodemus"
 # The Words box is filled the way a church would. Thai + Chinese together is how the church runs it.
 "$PY" tests/test_logic.py || status=1
+"$PY" tests/test_isolate.py || status=1
 if [ "${1:-}" = "board" ]; then
   # A sound board feed set too low (30 dB down) or too high (18 dB up, clipping).
   ffmpeg -y -loglevel error -i tests/clips/sermon-en.wav -af volume=-30dB -ar 16000 -ac 1 tests/clips/sermon-en-quiet.wav

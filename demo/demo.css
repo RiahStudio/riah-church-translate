@@ -66,6 +66,17 @@ h1 {
   letter-spacing: -0.01em;
 }
 
+/* ---------------------------------------------------------------- the download */
+.get { margin: 0 0 24px; }
+.get-main { display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; text-decoration: none; font-size: var(--riah-text-body); }
+.get-main[hidden] { display: none; }
+.get-note { margin: 10px 0 0; color: var(--riah-dim); font-size: var(--riah-text-small); }
+.get-note:empty { display: none; }
+.get-other { margin-top: 8px; color: var(--riah-dim); font-size: var(--riah-text-small); }
+.get-other summary { min-height: 32px; cursor: pointer; display: flex; align-items: center; }
+.get-other ul { margin: 4px 0 8px; padding-left: 20px; }
+.get-other p { margin: 0; }
+
 /* ---------------------------------------------------------------- the screen */
 .frame {
   position: relative;

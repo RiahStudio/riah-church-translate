@@ -20,6 +20,7 @@ from .awake import KeepAwake
 from .engine import Engine, be_gentle, run_offline
 from .church_words import church_glossary
 from .hub import Hub
+from .isolate import make_engine
 from .langs import LANGS
 from .models import app_data_dir, use_app_model_dir
 from .server import Api, serve
@@ -116,7 +117,8 @@ class App(Api):
         # On the church computer (Mac or PC) the display stays awake while live unless that's switched off.
         display = dict(dict(wakeLock=sys.platform in ("darwin", "win32")), **(s.get("display") or {}))
         self.hub = Hub(display=display, langs=dict(src=s["src"], tgts=s["tgts"]))
-        self.engine = Engine(self.hub)
+        self.engine = make_engine(self.hub, isolate=not args.no_isolate,
+                                  log=str(app_data_dir() / "riah-engine.log"))
         self.transcript = Transcript(app_data_dir() / "Transcripts")
         self.hub.taps.append(self.transcript.event)
         self.awake = KeepAwake(lambda: self.engine.running and self.hub.display.get("wakeLock")).start()
@@ -345,6 +347,8 @@ def parse(argv=None):
     p.add_argument("--lan", action="store_true", help="let other devices on the network open /screen")
     p.add_argument("--ui", choices=["window", "browser", "none"], default=None)
     p.add_argument("--autostart", action="store_true", help="start listening right away")
+    p.add_argument("--no-isolate", action="store_true",
+                   help="run the speech engine inside the app instead of in its own process (for debugging)")
     p.add_argument("--offline", metavar="AUDIO", help="test: run a recording through the pipeline, no screen")
     p.add_argument("--out", help="with --offline: write events here (JSON lines)")
     p.add_argument("--beam", type=int, default=1)
@@ -384,11 +388,14 @@ def main(argv=None):
         threading.Thread(target=replay, args=(app.hub, args.replay, 1.0, args.loop), daemon=True).start()
     elif args.autostart or args.file:
         app.start({})
+    elif hasattr(app.engine, "warm"):
+        app.engine.warm()             # the engine process loads its libraries now, so the first Start is quick
 
     ui = args.ui or ("window" if getattr(sys, "frozen", False) else "browser")
     if ui == "window":
         try:
             run_windows(app, control, screen)
+            _close_engine(app)
             return
         except Exception as e:  # no window toolkit (e.g. a PC without Edge WebView2): use the browser
             print(f"No app window ({e.__class__.__name__}: {e}); opening the browser instead.", flush=True)
@@ -401,6 +408,16 @@ def main(argv=None):
             time.sleep(3600)
     except KeyboardInterrupt:
         app.engine.stop()
+        _close_engine(app)
+
+
+def _close_engine(app):
+    close = getattr(app.engine, "close", None)
+    if close is not None:
+        try:
+            close()
+        except Exception:
+            pass
 
 
 def run_windows(app, control, screen):

@@ -82,4 +82,6 @@ English sermon → Thai on the projector (Chinese and English optional).
   needs nothing from you.
 - If the screen looks stuck: check the level bar (is sound coming in?), then press **Restart**
   next to Stop. It starts the hearing afresh in about a second, and the church screen keeps
-  its lines. A dropped feed reconnects by itself; only if Restart doesn't help, Stop and Start.
+  its lines. A dropped feed reconnects by itself, and if the speech engine itself crashes or
+  freezes the app swaps in a new one by itself (the screen says "reconnecting" and carries on
+  within about half a minute). Only if Restart doesn't help, Stop and Start.

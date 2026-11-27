@@ -485,11 +485,6 @@
     $("mt").value = settings.mt || "nllb";
     $("model").value = choiceFor(settings.model);
     $("churchWords").checked = settings.churchWords !== false;
-    $("crashReports").checked = settings.crashReports === true;
-    $("crashReports").addEventListener("change", (e) => {
-      const want = e.target.checked;
-      post("/api/reports", { on: want }).catch(() => { e.target.checked = !want; });
-    });
     $("hints").value = (st.glossary && st.glossary.hints) || "";
     showNotes(st.notes);
     showDisplay(st.display);

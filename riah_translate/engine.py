@@ -117,6 +117,12 @@ FAILS_FRESH = 3      # failed passes in a row before the hearing starts afresh (
 FAILS_RELOAD = 6     # ... before the speech model is loaded again from disk
 FAILS_RESTART = 10   # ... before the whole session is rebuilt by the retry loop (PassesFailed)
 RETRY_CAP = 8        # most seconds between restarts after a problem (30 for a download that keeps failing)
+# How long the live loop may go without finishing a turn before the app outside this process treats it
+# as hung (isolate.py). A turn is a fraction of a second; the slowest legitimate step, a Whisper pass
+# on a slow computer or loading the model again, gets its own larger allowance. Silence and mumbling
+# are not hangs: the loop keeps turning whatever the sound is.
+STALL_LIVE = 45      # seconds between turns of the live loop
+STALL_LOAD = 2400    # before the service is live: a first-time model download can take this long
 
 
 def fast_cores() -> int:
@@ -324,10 +330,21 @@ class Engine:
         self.verses = None            # verses.Verses once the Bible has loaded (in the background)
         self._verses_loading = False
         self.notes = None             # what the sermon notes gave: {"hints", "refs"}; never the notes
+        self._deadline = 0.0          # the loop must turn again before this (monotonic); see progress()
 
     @property
     def running(self):
         return bool(self.thread and self.thread.is_alive())
+
+    def progress(self, allow=None):
+        """The live loop turned (or is about to do something slow): it has `allow` seconds to turn
+        again before whoever watches it (isolate.py) calls it hung."""
+        self._deadline = time.monotonic() + (allow if allow is not None else (STALL_LIVE if self._live else STALL_LOAD))
+
+    def health(self):
+        """What the watcher outside this process reads once a second."""
+        return dict(running=self.running, live=self._live, restart=self.restart_flag.is_set(),
+                    overdue=round(max(0.0, time.monotonic() - self._deadline), 1) if self.running else 0.0)
 
     def start(self, cfg: dict):
         self.stop()
@@ -335,6 +352,7 @@ class Engine:
         self.restart_flag.clear()
         if cfg.get("verses", True) and cfg.get("src") == "en":
             self._load_verses()
+        self.progress(STALL_LOAD)
         self.thread = threading.Thread(target=self._run, args=(cfg,), daemon=True)
         self.thread.start()
 
@@ -359,6 +377,7 @@ class Engine:
     def _sleep(self, secs):
         """The pause before a retry. True when Stop was pressed; Restart cuts the pause short."""
         end = time.monotonic() + secs
+        self.progress(secs + STALL_LIVE)
         while not self.stop_flag.is_set():
             left = end - time.monotonic()
             if left <= 0 or self.restart_flag.is_set():
@@ -406,6 +425,7 @@ class Engine:
         return ", ".join(p for p in (theirs.strip(" ,"), (mine or "").strip(" ,")) if p)
 
     def _status(self, state, detail=""):
+        self.progress()
         self.hub.publish(dict(type="status", state=state, detail=detail))
         report.status(state)
 
@@ -439,8 +459,11 @@ class Engine:
         NOTHING ends it but Stop: whatever the error was, it tries again. Only a service that has
         never gone live can stop with a message (a recording, a language it can't listen to, a
         recording file that isn't there), because trying again can't fix those."""
-        self.seg = 0
-        self.next_id = int(time.time() * 1000)
+        # A new engine process carrying on an interrupted service (isolate.py) continues the numbering the
+        # screens already count by; a fresh service starts from the top.
+        resume = cfg.get("resume") or {}
+        self.seg = int(resume.get("seg", 0))
+        self.next_id = int(resume.get("next_id", int(time.time() * 1000)))
         self._live = False
         _contained("reset the Bible", self._reset_verses)
         tries = 0
@@ -570,6 +593,7 @@ class Engine:
             # speech model again, and only then rebuild the whole session (PassesFailed), which the
             # retry loop in _run always starts again. The sound input and translations run throughout.
             while not self.stop_flag.is_set():
+                self.progress()
                 if self.restart_flag.is_set():
                     # The sound person pressed Restart. The hearing starts afresh at once (what was
                     # heard so far is finished as lines first, with no new pass, so nothing is lost
@@ -632,6 +656,7 @@ class Engine:
                             raise PassesFailed(f"{bad} speech passes in a row failed: {e.__class__.__name__}: {e}") from e
                         _contained("repair the hearing", tr.recover, bad >= FAILS_FRESH)
                         if bad == FAILS_RELOAD:
+                            self.progress(STALL_LOAD)
                             forget_whisper(model_name, device)
                             model = tr.model = load_whisper(model_name, device, asr_threads, on_status=self._status)
                             self._status("listening", where)
