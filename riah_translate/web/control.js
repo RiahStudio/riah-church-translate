@@ -252,6 +252,83 @@
   }
   $("clear").addEventListener("click", () => post("/api/clear").catch(showError));
   $("openTranscripts").addEventListener("click", () => post("/api/open-transcripts").catch(showError));
+
+  // Problem report: the person sends it (Captain, 2026-11-27). It shows exactly what goes, then one
+  // press sends it, from every build (no key). A send that doesn't go through saves the same text
+  // as a file to email or message. Its messages stay in this box: the status up top is for the
+  // service.
+  const NOT_SENT = "It couldn't be sent from here, so it's saved instead. ";
+  let canSend = false;
+  function say(text) { $("problemResult").textContent = text; }
+  function showProblemBox(open) {
+    $("problemBox").hidden = !open;
+    $("problemOpen").hidden = open;
+    $("problemOpen").setAttribute("aria-expanded", String(open));
+  }
+  $("problemOpen").addEventListener("click", async () => {
+    say("");
+    $("problemFile").hidden = true;
+    $("problemSend").disabled = false;
+    try {
+      const r = await fetch("/api/problem-report").then((x) => {
+        if (!x.ok) throw new Error(`HTTP ${x.status}`);
+        return x.json();
+      });
+      canSend = !!r.canSend;
+      $("problemText").textContent = r.text || "";
+      $("problemSend").textContent = canSend ? "Send to Riah Studio" : "Save as a file";
+      $("problemLead").textContent = (canSend ? "This is everything the report holds." :
+        "This copy of the app can't send it by itself, so it saves this as a file for you to email or " +
+        "message to Riah Studio.") + " Nothing else goes: no sound, no words from the service, no notes, nothing typed.";
+      showProblemBox(true);
+      $("problemText").focus();
+    } catch (e) {
+      showProblemBox(true);
+      say(plain(e.message));
+    }
+  });
+  $("problemCancel").addEventListener("click", () => { showProblemBox(false); $("problemOpen").focus(); });
+  $("problemCopy").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText($("problemText").textContent);
+      say("Copied. Paste it into an email or a message to Riah Studio.");
+    } catch (e) {
+      const range = document.createRange();          // no clipboard here: select it for the person
+      range.selectNodeContents($("problemText"));
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      say(`Selected. Press ${/Mac/i.test(navigator.userAgent) ? "⌘C" : "Ctrl+C"} to copy it.`);
+    }
+  });
+  $("problemSend").addEventListener("click", async () => {
+    const btn = $("problemSend");
+    btn.disabled = true;
+    say(canSend ? "Sending…" : "Saving…");
+    try {
+      const r = await post("/api/problem-report");
+      if (r.text) $("problemText").textContent = r.text;
+      const lead = r.why === "failed" ? NOT_SENT : "";
+      if (r.sent) {
+        say("Sent to Riah Studio. Thank you.");
+        $("problemCancel").focus();                 // Send is done with; keep the keyboard in the box
+      } else if (r.saved) {
+        say(`${lead}It's in your ${r.folder} folder as “${r.file}”. Email or message that file to Riah Studio.`);
+        $("problemFile").hidden = false;
+        $("problemFile").focus();
+      } else {
+        say((lead ? "It couldn't be sent or saved from here. " : "It couldn't be saved as a file. ") +
+          "Press Copy and paste it into an email or a message to Riah Studio.");
+        btn.disabled = false;
+      }
+    } catch (e) {
+      const m = plain(e.message);
+      say(m.startsWith("Can't reach") ? m :
+        "It couldn't be sent or saved. Press Copy and paste it into an email or a message to Riah Studio.");
+      btn.disabled = false;
+    }
+  });
+  $("problemFile").addEventListener("click", () => post("/api/show-problem-file").catch((e) => say(plain(e.message))));
   $("hide").addEventListener("click", () => {
     sendDisplay({ hidden: $("hide").getAttribute("aria-pressed") !== "true" });
   });

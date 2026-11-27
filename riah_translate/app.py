@@ -214,6 +214,32 @@ class App(Api):
         report.switch(on, app_data_dir())
         return dict(ok=True, on=on)
 
+    def problem_report(self):
+        """What "Send a problem report" holds, in plain words, for the person to read first."""
+        return report.problem_report()
+
+    def send_problem_report(self, body=None):
+        """The person's one press: sent to the studio, or saved as a file to email or message."""
+        return report.send_problem()
+
+    def show_problem_file(self):
+        """Shows the saved problem report in Finder / Explorer, picked out."""
+        import os
+        import subprocess
+        path = report.last_file()
+        if path is None or not path.is_file():
+            raise ValueError("There's no saved problem report to show yet.")
+        try:
+            if sys.platform == "darwin":
+                subprocess.Popen(["open", "-R", str(path)])
+            elif os.name == "nt":
+                subprocess.Popen(f'explorer /select,"{path}"')      # one argument, or Explorer ignores it
+            else:
+                subprocess.Popen(["xdg-open", str(path.parent)])
+        except OSError:
+            raise ValueError(f"Couldn't open the folder. The report is at {path}") from None
+        return dict(ok=True)
+
     def display(self, body):
         d = {k: v for k, v in body.items() if k in DISPLAY_KEYS}
         if "layout" in d and d["layout"] not in LAYOUTS:

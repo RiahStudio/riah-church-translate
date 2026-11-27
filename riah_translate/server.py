@@ -41,6 +41,9 @@ class Api:
     def open_transcripts(self): ...
     def notes(self, body): ...
     def reports(self, body): ...
+    def problem_report(self): ...
+    def send_problem_report(self, body): ...
+    def show_problem_file(self): ...
 
 
 def make_handler(hub, api: Api):
@@ -150,6 +153,10 @@ def make_handler(hub, api: Api):
                 return self._json(api.outputs() if self._local() else [])
             if path == "/api/voices":
                 return self._json(api.voices() if self._local() else dict(available=False, voices={}))
+            if path == "/api/problem-report":
+                if not self._local():
+                    return self._send(404, b"not found", "text/plain")
+                return self._json(api.problem_report())
             # page assets (icon, css, js, vendor/...); /static/ is an older alias
             rel = path[len("/static/"):] if path.startswith("/static/") else path.lstrip("/")
             if rel.startswith("control") and not self._local():
@@ -189,6 +196,8 @@ def make_handler(hub, api: Api):
                 "/api/open-transcripts": api.open_transcripts,
                 "/api/notes": lambda: api.notes(body),
                 "/api/reports": lambda: api.reports(body),
+                "/api/problem-report": lambda: api.send_problem_report(body),
+                "/api/show-problem-file": api.show_problem_file,
                 "/api/voice-test": lambda: api.voice_test(body),
             }
             fn = routes.get(path)

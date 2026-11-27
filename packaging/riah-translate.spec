@@ -14,9 +14,6 @@ sys.path.insert(0, str(ROOT))
 datas = [(str(ROOT / "riah_translate" / "web"), "riah_translate/web"),
          (str(ROOT / "riah_translate" / "bible_words.json"), "riah_translate"),
          (str(ROOT / "riah_translate" / "bible"), "riah_translate/bible")]   # verse texts (~5 MB)
-# The crash-report key, when the build wrote one (not in web/: that folder is served on the network).
-if (ROOT / "riah_translate" / "report-key.txt").is_file():
-    datas.append((str(ROOT / "riah_translate" / "report-key.txt"), "riah_translate"))
 binaries = []
 hidden = collect_submodules("riah_translate") + collect_submodules("huggingface_hub")
 try:

@@ -65,13 +65,6 @@ jobs:
           pip-licenses --from=mixed --with-license-file --no-license-path --format=plain-vertical --ignore-packages pip-licenses prettytable wcwidth pyinstaller pyinstaller-hooks-contrib altgraph macholib --output-file riah_translate/web/THIRD-PARTY-NOTICES.txt
           grep -q "faster-whisper" riah_translate/web/THIRD-PARTY-NOTICES.txt
 
-      - name: Crash-report key (no secret means crash reports stay off in this build)
-        shell: bash
-        env:
-          KEY: ${{ secrets.RIAH_TRANSLATE_REPORT_KEY }}
-        run: |
-          if [ -n "$KEY" ]; then printf '%s\n' "$KEY" > riah_translate/report-key.txt; echo "key added"; else echo "no key: crash reports stay off"; fi
-
       - name: Build the app
         run: pyinstaller --noconfirm packaging/riah-translate.spec
 

@@ -218,6 +218,35 @@ input[type="range"] {
 
 .more[open] summary { margin-bottom: 14px; }
 
+.problem {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  border-top: 1px solid var(--riah-rule);
+  padding-top: 14px;
+}
+
+.problem .row-end { flex-wrap: wrap; }
+.problem-lead { flex: 1; min-width: 12em; margin: 0; }
+.problem-box { display: grid; gap: 10px; }
+.problem-box[hidden], .problem [hidden] { display: none; }
+
+.problem-text {
+  margin: 0;
+  max-height: 260px;
+  overflow: auto;
+  padding: 12px 14px;
+  border: 1px solid var(--riah-rule);
+  border-radius: 8px;
+  color: var(--riah-ink);
+  font: 400 var(--riah-text-small)/1.5 var(--riah-font-data);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.problem-result { margin: 0; color: var(--riah-ink); font: 400 var(--riah-text-small)/1.45 var(--riah-font-ui); }
+.problem-result:empty { display: none; }
+
 .foot {
   display: flex;
   justify-content: space-between;

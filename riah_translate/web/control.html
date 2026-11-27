@@ -150,6 +150,25 @@
         <p class="hint">These apply the next time you press Start.</p>
         <label class="check"><input type="checkbox" id="crashReports"> Send crash reports to Riah Studio</label>
         <p class="hint">Only what broke and when. Never the sermon, the sound, or anything typed.</p>
+        <div class="problem">
+          <div class="row-end">
+            <p class="hint problem-lead">Something went wrong? Send the studio what broke and when.</p>
+            <button class="riah-button" id="problemOpen" type="button" aria-expanded="false"
+                    aria-controls="problemBox">Send a problem report</button>
+          </div>
+          <div class="problem-box" id="problemBox" hidden>
+            <p class="hint" id="problemLead">This is everything the report holds. Nothing else goes: no sound,
+              no words from the service, no notes, nothing typed.</p>
+            <pre class="problem-text" id="problemText" tabindex="0" aria-label="The problem report"></pre>
+            <p class="problem-result" id="problemResult" aria-live="polite"></p>
+            <div class="row-end">
+              <button class="riah-button" id="problemCancel" type="button">Close</button>
+              <button class="riah-button" id="problemCopy" type="button">Copy</button>
+              <button class="riah-button" id="problemFile" type="button" hidden>Show the file</button>
+              <button class="riah-button riah-button--primary" id="problemSend" type="button">Send to Riah Studio</button>
+            </div>
+          </div>
+        </div>
       </details>
     </section>
   </main>

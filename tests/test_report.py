@@ -1,4 +1,5 @@
-"""Crash reports (report.py): off by default, never carry words or folders, never slow the service.
+"""Crash reports (report.py): off by default, sent only when something breaks, never carry words
+or folders, never slow the service.
 No models, no microphone, nothing leaves this computer (a local test server stands in for the
 studio). Safe to run anywhere:
 
@@ -17,7 +18,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from riah_translate import report  # noqa: E402
 from riah_translate.report import Reporter, exc_name, frames, post, where  # noqa: E402
 
-ALLOWED = {"v", "kind", "app", "platform", "install", "live", "at", "exc", "frames", "recovered", "n", "prev"}
+ALLOWED = {"v", "kind", "app", "platform", "install", "live", "at", "exc", "frames", "recovered", "n",
+           "back", "secs", "closed"}
 
 
 def wait_for(cond, secs=3):
@@ -32,7 +34,6 @@ def wait_for(cond, secs=3):
 def quiet(**kw):
     """A reporter that collects what it would send, without touching the real hooks."""
     got = []
-    kw.setdefault("key", "test-key-0123456789")
     r = Reporter(send=got.append, **kw)
     r._hooks = True
     return r, got
@@ -52,10 +53,10 @@ def caught(text="the sermon said John 3:16 at C:\\Users\\pastor\\Documents\\secr
 
 
 class Studio:
-    """A local stand-in for the studio's endpoint: keeps each report and its key."""
+    """A local stand-in for the studio's endpoint: keeps each report and any key it came with."""
 
-    def __init__(self, delay=0.0, status=204):
-        self.got, self.delay, self.status = [], delay, status
+    def __init__(self, delay=0.0, status=204, body=b""):
+        self.got, self.delay, self.status, self.body = [], delay, status, body
         outer = self
 
         class H(BaseHTTPRequestHandler):
@@ -69,8 +70,9 @@ class Studio:
                 outer.got.append((self.headers.get("Authorization"), json.loads(body)))
                 try:
                     self.send_response(outer.status)
-                    self.send_header("Content-Length", "0")
+                    self.send_header("Content-Length", str(len(outer.body)))
                     self.end_headers()
+                    self.wfile.write(outer.body)
                 except OSError:
                     pass                                 # the app already gave up waiting
 
@@ -181,84 +183,155 @@ def test_sending_never_touches_the_service():
     with tempfile.TemporaryDirectory() as d:
         r2.switch(True, Path(d))
         r2.event("bad_pass", caught(), recovered=True)
-        assert wait_for(lambda: calls == ["start", "bad_pass"]), calls   # the sender lived through it
+        r2.event("crash", caught("another"))
+        assert wait_for(lambda: calls == ["bad_pass", "crash"]), calls   # the sender lived through it
         r2.stop_thread()
 
     t = time.perf_counter()
-    assert post("http://127.0.0.1:9/nothing-here", "k", {"kind": "start"}, timeout=1) is False
+    assert post("http://127.0.0.1:9/nothing-here", {"kind": "crash"}, timeout=1) is False
     slow = Studio(delay=3)
     try:
-        assert post(slow.url, "k", {"kind": "start"}, timeout=0.5) is False   # gives up, no exception
+        assert post(slow.url, {"kind": "crash"}, timeout=0.5) is False   # gives up, no exception
     finally:
         slow.close()
     assert time.perf_counter() - t < 3
 
+    # A person's send counts only when the studio itself says so (not a sign-in page, not any 200).
+    for status, body, want in ((201, b'{"ok":true}', True), (200, b"<html>Sign in</html>", False),
+                               (200, b"", False), (201, b'{"ok":false}', False), (401, b'{"ok":true}', False)):
+        s = Studio(status=status, body=body)
+        try:
+            assert post(s.url, {"kind": "user"}, timeout=2, want_ok=True) is want, (status, body)
+        finally:
+            s.close()
+
 
 def test_reports_reach_the_studio():
-    """Start, a failure, then 'back up' as soon as it is listening again, plus the 10-minute heartbeat."""
+    """Nothing on a normal day; a failure right away; a restart once it's listening again, saying so."""
     studio = Studio()
-    saved = report.HEARTBEAT_SEC
     try:
         with tempfile.TemporaryDirectory() as d:
-            r = Reporter(url=studio.url, key="test-key")
+            r = Reporter(url=studio.url)
             r._hooks = True
             r.switch(True, Path(d))
-            assert wait_for(lambda: len(studio.got) == 1)
-            auth, start = studio.got[0]
-            assert auth == "Bearer test-key" and start["kind"] == "start" and "prev" not in start
-            assert len(start["install"]) == 12 and start["app"] and start["platform"]
-
+            r.status("loading")
             r.status("listening")
-            r.event("bad_pass", caught(), recovered=True)
-            r.status("reconnecting")
-            r.status("listening")                        # back: a heartbeat right away
-            assert wait_for(lambda: [g[1]["kind"] for g in studio.got] == ["start", "bad_pass", "heartbeat"]), studio.got
-            assert studio.got[1][1]["recovered"] is True and studio.got[2][1]["live"] is True
+            time.sleep(0.3)
+            assert studio.got == [], studio.got          # opening and listening: nothing at all
 
-            report.HEARTBEAT_SEC = 0.2
-            r._next_hb = 0
-            r._put(("mark",))
-            assert wait_for(lambda: len(studio.got) >= 5), studio.got       # and on its own, every so often
-            assert all(g[1]["kind"] == "heartbeat" for g in studio.got[3:])
-            assert all(g[0] == "Bearer test-key" for g in studio.got)
+            r.event("bad_pass", caught(), recovered=True)
+            assert wait_for(lambda: len(studio.got) == 1), studio.got
+            auth, bad = studio.got[0]
+            assert auth is None and bad["kind"] == "bad_pass" and bad["recovered"] is True   # no key
+            assert len(bad["install"]) == 12 and bad["app"] and bad["platform"] and bad["n"] == 1
+
+            r.event("restart", caught("five bad passes"), recovered=False)
+            r.status("reconnecting")
+            r.status("loading")
+            time.sleep(0.3)
+            assert len(studio.got) == 1                  # held: it says whether it came back
+            r.status("listening")
+            assert wait_for(lambda: len(studio.got) == 2), studio.got
+            again = studio.got[1][1]
+            assert again["kind"] == "restart" and again["back"] is True and again["live"] is True
+            assert isinstance(again["secs"], int) and again["recovered"] is False
+            time.sleep(0.3)
+            assert len(studio.got) == 2                  # no extra 'back': it was in the same report
 
             r.switch(False)
-            time.sleep(0.4)                              # let a heartbeat already on its way land
-            n = len(studio.got)
             r.event("crash", caught())
-            time.sleep(0.5)
-            assert len(studio.got) == n                  # off again: silent
+            r.event("restart", caught())
+            time.sleep(0.4)
+            assert len(studio.got) == 2                  # off again: silent
             r.stop_thread()
     finally:
-        report.HEARTBEAT_SEC = saved
         studio.close()
 
 
-def test_a_run_that_stopped_suddenly():
-    """If the app vanished mid-service (no clean quit), the next start says so; a clean quit doesn't."""
+def test_not_back_in_time_then_back():
+    """Still down after the wait: the report goes saying so, and one 'back' follows when it listens."""
+    now = [1000.0]
+    r, got = quiet(clock=lambda: now[0])
     with tempfile.TemporaryDirectory() as d:
-        r, got = quiet()
-        r._put = got.append
+        r.switch(True, Path(d))
+        r.status("listening")
+        e = caught()
+        r.event("restart", e, recovered=False)
+        for _ in range(5):
+            r.event("restart", e, recovered=False)       # it keeps failing while down: counted
+        now[0] += report.WAIT_BACK_SEC + 1
+        r._put(("mark",))                                # (the real sender wakes on its own timer)
+        assert wait_for(lambda: len(got) == 1), got
+        assert got[0]["kind"] == "restart" and got[0]["back"] is False and got[0]["n"] == 6
+        assert got[0]["live"] is False
+        assert wait_for(lambda: json.loads((Path(d) / report.FILE).read_text())["open"]["down"] is True)
+
+        now[0] += 600
+        r.status("loading")
+        r.status("listening")
+        assert wait_for(lambda: len(got) == 2), got
+        assert got[1]["kind"] == "back" and got[1]["secs"] == 721 and got[1]["live"] is True
+        r.status("reconnecting")
+        r.status("listening")                            # a sound input dropping out isn't a failure
+        time.sleep(0.2)
+        assert len(got) == 2
+        assert set(got[1]) <= ALLOWED and set(got[0]) <= ALLOWED
+        r.stop_thread()
+
+
+def drain(r):
+    items = []
+    while not r._q.empty():
+        items.append(r._q.get_nowait())
+    return items
+
+
+def test_a_run_that_stopped_suddenly():
+    """If the app vanished mid-service (no clean quit), the next run says so once it's listening
+    again; a clean quit says nothing; quitting while down says 'back' on the next run."""
+    now = [50.0]
+    with tempfile.TemporaryDirectory() as d:
+        r, got = quiet(clock=lambda: now[0])
         r._start_thread = lambda: None
+        r._put = got.append
         r.switch(True, Path(d))
         ident = r.install
         r.live = True
-        r._write_marker(dict(live=True))                 # what the sender writes while listening
+        r._write_marker(r._open_now())                   # what the sender writes while listening
 
-        r2, got2 = quiet()
-        r2._put = got2.append
+        r2, got2 = quiet(clock=lambda: now[0])
         r2._start_thread = lambda: None
         r2.switch(True, Path(d))
-        assert got2[0]["prev"] == "lost" and r2.install == ident, got2
+        assert r2.install == ident and got2 == []        # held until it's listening again
+        assert [i for i in drain(r2) if isinstance(i, dict)] == []
+        now[0] += 40
+        r2.status("listening")
+        sent = [i for i in drain(r2) if isinstance(i, dict)]
+        assert [s["kind"] for s in sent] == ["lost"], sent
+        assert sent[0]["back"] is True and sent[0]["secs"] == 40 and "exc" not in sent[0]
+        assert set(sent[0]) <= ALLOWED
         r2.closing()
 
         r3, got3 = quiet()
-        r3._put = got3.append
         r3._start_thread = lambda: None
         r3.switch(True, Path(d))
-        assert "prev" not in got3[0] and r3.install == ident
+        r3.status("listening")
+        assert [i for i in drain(r3) if isinstance(i, dict)] == [] and r3.install == ident
         stored = json.loads((Path(d) / report.FILE).read_text())
-        assert set(stored) <= {"install", "open"}
+        assert set(stored) <= {"install", "open", "down"}
+
+        # Quit while a restart was still waiting: it goes now, marked closed, and the next run
+        # says when it is listening again.
+        r3.event("restart", caught(), recovered=False)
+        r3.closing()
+        assert [g["kind"] for g in got3] == ["restart"] and got3[0]["closed"] is True and got3[0]["back"] is False
+        assert json.loads((Path(d) / report.FILE).read_text()).get("down") is True
+        r4, _ = quiet()
+        r4._start_thread = lambda: None
+        r4.switch(True, Path(d))
+        r4.status("listening")
+        sent = [i for i in drain(r4) if isinstance(i, dict)]
+        assert [s["kind"] for s in sent] == ["back"] and "secs" not in sent[0], sent
 
 
 def test_uncaught_thread_error_is_reported():
@@ -274,8 +347,8 @@ def test_uncaught_thread_error_is_reported():
             t = threading.Thread(target=boom, args=("words",))
             t.start()
             t.join()
-            assert [g["kind"] for g in got] == ["start", "crash"], got
-            assert got[1]["exc"] == "RuntimeError" and got[1]["recovered"] is False
+            assert [g["kind"] for g in got] == ["crash"], got
+            assert got[0]["exc"] == "RuntimeError" and got[0]["recovered"] is False
     finally:
         sys.excepthook, threading.excepthook = saved
         import atexit
@@ -347,9 +420,10 @@ def test_engine_reports_bad_passes_and_restarts():
                 raise RuntimeError("five bad passes")
         eng._session = session
         eng._run(cfg)
-        sent = [g for g in got if isinstance(g, dict)]
-        assert [g["kind"] for g in sent] == ["restart"], got
-        assert sent[0]["recovered"] is False and "five" not in json.dumps(sent[0])
+        assert [g for g in got if isinstance(g, dict)] == [], got        # held until it's listening
+        held = [h for _, h in r._held]
+        assert [g["kind"] for g in held] == ["restart"], held
+        assert held[0]["recovered"] is False and "five" not in json.dumps(held[0])
     finally:
         report._reporter, A.MicSource, E.StreamingTranscriber, E.load_whisper, E.choose_whisper = saved
 
@@ -372,35 +446,252 @@ def test_operator_switch():
     assert fake.settings.data["crashReports"] is False
 
 
-def test_no_key_in_the_source():
-    # The key comes from the build (report-key.txt) or RIAH_TRANSLATE_REPORT_KEY, never the source.
-    src = (Path(report.__file__)).read_text(encoding="utf-8")
-    assert "ctw1_" not in src
-    import os
-    real_file, real_env = report.KEY_FILE, os.environ.pop("RIAH_TRANSLATE_REPORT_KEY", None)
+def test_no_key_anywhere():
+    # Every build can send, with nothing to set up (Captain, 2026-11-27): no key in the source, the
+    # builds or the requests.
+    root = Path(report.__file__).resolve().parents[1]
+    src = Path(report.__file__).read_text(encoding="utf-8")
+    assert "ctw1_" not in src and "Authorization" not in src and "report-key" not in src
+    for f in (".github/workflows/mac-build.yml", ".github/workflows/windows-build.yml", "packaging/riah-translate.spec"):
+        p = root / f
+        if p.exists():                                   # the public copy has the same files
+            assert "REPORT_KEY" not in p.read_text(encoding="utf-8") and "report-key" not in p.read_text(encoding="utf-8"), f
     with tempfile.TemporaryDirectory() as d:
-        try:
-            report.KEY_FILE = Path(d) / "report-key.txt"
-            assert report._ingest_key() == ""                                    # plain checkout
-            report.KEY_FILE.write_text("ctw1_from-the-build-0123456789\n")
-            assert report._ingest_key() == "ctw1_from-the-build-0123456789"
-            report.KEY_FILE.write_text("not a key; rm -rf /\n")
-            assert report._ingest_key() == ""
-            os.environ["RIAH_TRANSLATE_REPORT_KEY"] = "ctw1_from-the-env-0123456789"
-            assert report._ingest_key() == "ctw1_from-the-env-0123456789"
-        finally:
-            report.KEY_FILE = real_file
-            os.environ.pop("RIAH_TRANSLATE_REPORT_KEY", None)
-            if real_env is not None:
-                os.environ["RIAH_TRANSLATE_REPORT_KEY"] = real_env
-
-        # No key: ticking the box sends nothing and starts nothing.
-        r, got = quiet(key="")
+        # Ticking the box works in any build.
+        r, got = quiet()
         r.switch(True, Path(d))
-        assert r.on is False and r._thread is None
-        r.event("bad_pass", RuntimeError("x"), recovered=True)
-        time.sleep(0.05)
-        assert got == []
+        assert r.on is True and r.can_send() is True
+        r.event("bad_pass", caught(), recovered=True)
+        assert wait_for(lambda: len(got) == 1), got
+        r.stop_thread()
+
+
+SECRETS = ("sermon", "John", "pastor", "Users", "secret", "Documents", "Claude Cowork", "\\")
+
+
+def test_problems_are_kept_with_reports_off():
+    """A person's report needs to know what broke, so the list is kept even with the tick off.
+    It stays on this computer: nothing is sent and no thread starts."""
+    now = [100.0]
+    with tempfile.TemporaryDirectory() as d:
+        r, got = quiet(clock=lambda: now[0])
+        r.switch(False, Path(d))
+        r.status("listening")
+        e = caught()
+        for _ in range(3):
+            r.event("bad_pass", e, recovered=True)
+        r.event("restart", caught("five bad passes"), recovered=False)
+        r.status("reconnecting")
+        now[0] += 14
+        r.status("listening")
+        assert got == [] and r._thread is None and r.on is False
+        log = [e for e in r._log]
+        assert [x["kind"] for x in log] == ["bad_pass", "restart"], log
+        assert log[0]["n"] == 3 and log[1]["back"] is True and log[1]["secs"] == 14
+        saved = json.loads((Path(d) / report.LOG_FILE).read_text(encoding="utf-8"))
+        text = json.dumps(saved)
+        for s in SECRETS:
+            assert s not in text, (s, text)
+        assert all(set(x) <= set(report.LOG_KEYS) for x in saved["problems"]), saved
+
+        # The app vanished while listening: the next run lists a sudden stop.
+        r.event("crash", caught())
+        r.live = True
+        r._write_marker(r._open_now())
+        r2, _ = quiet()
+        r2.switch(False, Path(d))
+        assert [x["kind"] for x in r2._log] == ["bad_pass", "restart", "crash", "lost"], r2._log
+        assert r2.install == r.install
+        r2.status("listening")
+        assert r2._log[-1]["back"] is True
+        r2.closing()                                     # a clean quit: the run after says nothing new
+        r3, _ = quiet()
+        r3.switch(False, Path(d))
+        assert [x["kind"] for x in r3._log] == ["bad_pass", "restart", "crash", "lost"]
+
+        # Anything odd in the file is dropped; old problems go after 30 days.
+        bad = dict(v=1, problems=[dict(kind="crash", at="2020-01-01T00:00:00Z"),
+                                  dict(kind="bad_pass", at=report.now_iso(), exc="x y", frames=["/Users/p/a.py:1", "a.py:2"],
+                                       note="the sermon"), dict(kind="evil", at=report.now_iso()), "nope"])
+        (Path(d) / report.LOG_FILE).write_text(json.dumps(bad), encoding="utf-8")
+        r4, _ = quiet()
+        r4.switch(False, Path(d))
+        assert len(r4._log) == 1 and r4._log[0]["frames"] == ["a.py:2"] and "exc" not in r4._log[0]
+        assert "note" not in r4._log[0]
+
+
+def test_problem_report_says_only_what_broke():
+    now = [100.0]
+    with tempfile.TemporaryDirectory() as d:
+        r, _ = quiet(clock=lambda: now[0])
+        r.switch(False, Path(d))
+        empty = r.problem_report()
+        assert empty["kind"] == "user" and empty["problems"] == []
+        assert "Nothing has broken" in report.problem_text(empty)
+
+        r.event("restart", caught(), recovered=False)
+        now[0] += 14
+        r.status("listening")
+        for i in range(40):                              # far more than fit: newest first, under 4 KB
+            kind = type(f"BrokeNumber{i}", (Exception,), {})
+            try:
+                raise kind(i)
+            except kind as k:
+                now[0] += report.SAME_EVERY_SEC + 1
+                r.event("crash", k)
+        p = r.problem_report()
+        body = json.dumps(p, separators=(",", ":"))
+        assert len(body) <= report.REPORT_MAX_BYTES, len(body)
+        assert set(p) <= ALLOWED | {"problems"}, p
+        assert 1 <= len(p["problems"]) <= report.IN_REPORT
+        assert all(set(x) <= set(report.LOG_KEYS) and len(x.get("frames", [])) <= report.REPORT_FRAMES
+                   for x in p["problems"])
+        text = report.problem_text(p)
+        for s in SECRETS:
+            assert s not in body and s not in text, s
+
+        r2, _ = quiet(clock=lambda: now[0])
+        r2.event("restart", caught(), recovered=False)
+        now[0] += 14
+        r2.status("listening")
+        for _ in range(2):
+            r2.event("bad_pass", caught(), recovered=True)
+        text = report.problem_text(r2.problem_report())
+        assert "What broke, newest first:" in text and "(2 times, last at " in text
+        assert "The service broke and restarted itself. Back up and listening after 14 s." in text
+        assert "Error: RuntimeError. Where: " in text and "test_report.py:" in text
+        assert text.rstrip().endswith("no folders and nothing typed.")
+
+
+def test_send_problem_sends_once_or_saves_a_file():
+    with tempfile.TemporaryDirectory() as d:
+        out = Path(d) / "Downloads"
+        sent = []
+        r, got = quiet(send_user=lambda p: sent.append(p) or True)
+        r.event("bad_pass", caught(), recovered=True)
+        a = r.send_problem(out)
+        assert a["sent"] is True and len(sent) == 1 and sent[0]["kind"] == "user"
+        assert sent[0]["problems"][0]["kind"] == "bad_pass" and got == []
+        assert r.send_problem(out)["sent"] is True and len(sent) == 1    # a second press: not twice
+        assert not out.exists()
+
+        r2, _ = quiet(send_user=lambda p: False)          # the studio didn't take it
+        b = r2.send_problem(out)
+        assert b["sent"] is False and b["saved"] is True and b["why"] == "failed"
+        f = out / b["file"]
+        assert f.read_text(encoding="utf-8") == b["text"] + "\n" and b["folder"] == "Downloads"
+        assert b["file"].startswith("Riah Translate problem report ") and r2.last_file() == f
+        c = r2.send_problem(out)                          # never over the last one
+        assert c["file"] != b["file"] and (out / b["file"]).exists()
+
+        def offline(p):
+            raise OSError("no connection")
+        r3, _ = quiet(send_user=offline)                  # no connection: saved all the same
+        e = r3.send_problem(out)
+        assert e["sent"] is False and e["why"] == "failed" and e["saved"] is True
+
+        stuck = Path(d) / "a-file"
+        stuck.write_text("x")
+        g = r3.send_problem(stuck)                        # can't save either: says so, never raises
+        assert g["sent"] is False and g["saved"] is False and g["text"]
+
+
+def test_problem_report_through_the_app_server():
+    """Only this computer can read or send it, and the send is a JSON POST like every other change."""
+    import socket
+    import urllib.error
+    import urllib.request
+    from riah_translate.hub import Hub
+    from riah_translate.server import serve
+
+    calls = []
+
+    class FakeApi:
+        def __getattr__(self, name):                     # every other route: does nothing
+            return lambda *a, **k: None
+
+        def problem_report(self):
+            return dict(text="Riah Church Translate problem report", canSend=True)
+
+        def send_problem_report(self, body):
+            calls.append(body)
+            return dict(sent=False, saved=True, file="x.txt", folder="Downloads", text="t", why="failed")
+
+        def show_problem_file(self):
+            calls.append("show")
+
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        port = s.getsockname()[1]
+    httpd = serve(Hub(), FakeApi(), port=port)
+    base = f"http://127.0.0.1:{httpd.server_address[1]}"
+    try:
+        with urllib.request.urlopen(base + "/api/problem-report", timeout=5) as r:
+            assert json.loads(r.read())["canSend"] is True
+
+        def send(path, headers):
+            req = urllib.request.Request(base + path, data=b"{}", method="POST", headers=headers)
+            try:
+                with urllib.request.urlopen(req, timeout=5) as r:
+                    return r.status, json.loads(r.read())
+            except urllib.error.HTTPError as e:
+                return e.code, None
+        assert send("/api/problem-report", {"Content-Type": "application/json"})[1]["saved"] is True
+        assert send("/api/show-problem-file", {"Content-Type": "application/json"})[0] == 200
+        assert send("/api/problem-report", {"Content-Type": "text/plain"})[0] == 403
+        assert send("/api/problem-report", {"Content-Type": "application/json", "Origin": "https://evil.example"})[0] == 403
+        assert calls == [{}, "show"], calls
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+
+
+def test_a_repeating_problem_stays_one_line():
+    """One failure every 11 minutes for hours must not push a rarer one off the list, and a Stop
+    after a restart isn't counted as hours down."""
+    now = [100.0]
+    with tempfile.TemporaryDirectory() as d:
+        r, _ = quiet(clock=lambda: now[0])
+        r.switch(False, Path(d))
+        r.status("listening")
+        r.event("crash", caught())
+        for _ in range(30):
+            now[0] += report.SAME_EVERY_SEC + 60
+            r.event("bad_pass", caught(), recovered=True)
+        assert [x["kind"] for x in r._log] == ["crash", "bad_pass"] and r._log[1]["n"] == 30, r._log
+        r.event("crash", caught())                       # the older one again: back on top
+        assert [x["kind"] for x in r._log] == ["bad_pass", "crash"] and r._log[1]["n"] == 2
+
+        r.event("restart", caught("x"), recovered=False)
+        r.status("reconnecting")
+        r.status("stopped")                              # someone pressed Stop
+        now[0] += 7200
+        r.status("listening")
+        last = r._log[-1]
+        assert last["kind"] == "restart" and "back" not in last and "secs" not in last, last
+        assert "after 2 h" not in report.problem_text(r.problem_report())
+
+        # Seen again on another day: the text gives that day too, not just a time.
+        e = dict(kind="bad_pass", at="2026-11-20T10:00:00Z", last="2026-11-27T10:00:00Z", n=9)
+        p = dict(v=1, kind="user", app="0.3.0", platform="x", install="a1b2c3d4e5f6", live=True,
+                 at="2026-11-27T10:05:00Z", problems=[e])
+        assert ", last at " + report._when(e["last"]) in report.problem_text(p)
+
+    # Two presses at once send once.
+    calls = []
+
+    def slow(p):
+        calls.append(p)
+        time.sleep(0.2)
+        return True
+    r2 = Reporter("https://x.test/r", send=lambda p: True, send_user=slow)
+    outs = []
+    ts = [threading.Thread(target=lambda: outs.append(r2.send_problem())) for _ in range(2)]
+    for t in ts:
+        t.start()
+    for t in ts:
+        t.join()
+    assert len(calls) == 1 and [o["sent"] for o in outs] == [True, True], (calls, outs)
 
 
 if __name__ == "__main__":
