@@ -87,8 +87,9 @@ jobs:
           curl -sf -o /dev/null http://127.0.0.1:5390/type/sarabun-thai-600-normal.woff2
           curl -sf http://127.0.0.1:5390/api/state | grep -q '"wakeLock": true'
           # The speech engine must be running in its own process in the built app, not the in-app fallback
-          for i in $(seq 1 90); do curl -sf http://127.0.0.1:5390/api/state | grep -q '"engine": "process"' && break; sleep 1; done
-          curl -sf http://127.0.0.1:5390/api/state | grep -q '"engine": "process"' || { echo "engine is not in its own process:"; curl -s http://127.0.0.1:5390/api/state | grep -o '"engine": "[a-z]*"'; cat app.log; exit 1; }
+          engine_mode() { curl -sf http://127.0.0.1:5390/api/state | grep -o '"engine": "[a-z]*"' || true; }
+          for i in $(seq 1 90); do [ "$(engine_mode)" = '"engine": "process"' ] && break; sleep 1; done
+          [ "$(engine_mode)" = '"engine": "process"' ] || { echo "engine is not in its own process: $(engine_mode)"; cat app.log; exit 1; }
           test "$(curl -s -o /dev/null -w '%{http_code}' -H 'Host: evil.example' http://127.0.0.1:5390/)" = 403
           curl -sf http://127.0.0.1:5390/api/devices
           echo
