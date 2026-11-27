@@ -10,12 +10,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import threading
 import time
 import webbrowser
 
-from . import __version__, report
+from . import __version__, report, update
 from .awake import KeepAwake
 from .engine import Engine, be_gentle, run_offline
 from .church_words import church_glossary
@@ -123,6 +124,7 @@ class App(Api):
         self.hub.taps.append(self.transcript.event)
         self.awake = KeepAwake(lambda: self.engine.running and self.hub.display.get("wakeLock")).start()
         self.open_screen_hook = None
+        self.update_info = None            # {'version', 'url'} once a newer version is known
         self.relayout_hook = None
         self.notes_info = None         # the sermon notes in use: file name and what was found, never the text
         report.switch(s.get("crashReports") is True, app_data_dir())
@@ -132,7 +134,7 @@ class App(Api):
         snap = self.hub.snapshot()
         snap.update(settings={k: v for k, v in self.settings.data.items() if k != "display"},
                     glossary=self.settings.glossary, running=self.engine.running, version=__version__,
-                    engine=self.engine_mode(),
+                    engine=self.engine_mode(), update=self.update_info,
                     canOpenWindow=self.open_screen_hook is not None, notes=self.notes_info,
                     lanUrl=f"http://{_lan_ip()}:{self.args.port}/screen" if self.args.lan else None)
         return snap
@@ -316,6 +318,20 @@ class App(Api):
             return dict(ok=True, opened="window")
         return dict(ok=True, opened="browser", layout=layout)
 
+    def check_for_update(self):
+        """Once, in the background: is a newer version out? The operator page shows a line if so."""
+        def run():
+            self.update_info = update.check()
+        threading.Thread(target=run, name="update-check", daemon=True).start()
+
+    def open_update(self):
+        """Open the download page (it picks the right file for this computer) in the browser."""
+        try:
+            webbrowser.open(update.PAGE)
+        except Exception:
+            raise ValueError(f"Couldn't open the browser. The download page is {update.PAGE}") from None
+        return dict(ok=True, url=update.PAGE)
+
 
 def replay(hub, path, speed=1.0, loop=False):
     """Plays a recorded run (events.jsonl from --offline) into the screens with its real timing."""
@@ -398,6 +414,8 @@ def main(argv=None):
         app.start({})
     elif hasattr(app.engine, "warm"):
         app.engine.warm()             # the engine process loads its libraries now, so the first Start is quick
+    if not (args.replay or os.environ.get("RIAH_TRANSLATE_NO_UPDATE_CHECK")):
+        app.check_for_update()
 
     ui = args.ui or ("window" if getattr(sys, "frozen", False) else "browser")
     if ui == "window":

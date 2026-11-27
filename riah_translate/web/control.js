@@ -463,6 +463,26 @@
     es.onerror = () => { if (state !== "error") $("detail").textContent = "Reconnecting to the app…"; };
   }
 
+  // A newer dated version is out: a quiet line with one click to the download page. The app asks GitHub once,
+  // in the background, a few seconds after it opens, so look again shortly after boot.
+  let updateDismissed = false;
+  function showUpdate(u) {
+    const note = $("updateNote");
+    if (!u || !u.version || updateDismissed) { note.hidden = true; return; }
+    $("updateText").textContent = `A newer version (${u.version}) is out.`;
+    note.hidden = false;
+  }
+  function watchForUpdate() {
+    for (const secs of [6, 30]) {
+      setTimeout(() => {
+        if (updateDismissed) return;
+        fetch("/api/state").then((r) => r.json()).then((st) => showUpdate(st.update)).catch(() => {});
+      }, secs * 1000);
+    }
+    $("updateGo").addEventListener("click", () => { post("/api/open-update").catch(() => {}); });
+    $("updateLater").addEventListener("click", () => { updateDismissed = true; $("updateNote").hidden = true; });
+  }
+
   async function boot() {
     const [st, ls, devs, outs, vox] = await Promise.all([
       fetch("/api/state").then((r) => r.json()),
@@ -491,6 +511,8 @@
     setStatus(st.status.state, st.status.detail);
     setLag(st.stats);
     $("version").textContent = `Riah Church Translate ${st.version}`;
+    showUpdate(st.update);
+    watchForUpdate();
     if (st.lanUrl) $("lanNote").textContent = `Another computer can show the screen at ${st.lanUrl}`;
     fitPreview();
     renderVoiceRows();

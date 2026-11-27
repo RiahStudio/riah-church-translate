@@ -48,8 +48,13 @@ What we know isn't right yet, or hasn't been tried. Worth reading before a churc
   traceback on disk. The preacher's Mac build predates all of this.
 - Problem reports are sent by the person, never automatically: after a problem the app offers
   **Send a problem report**, shows exactly what would go (what broke and when; never sound, words,
-  notes or anything typed), and sends it to riahstudio.com on their click. If they are offline it
-  saves a small file they can send later. Nothing is sent without that click.
+  notes or anything typed), and sends it to the studio's report inbox on their click (nobody is messaged; the studio fixes it and
+  releases a new dated version). If they are offline it saves a small file they can send later.
+  Nothing is sent without that click.
+- Versions are dated (`2026.11.28`; a second one the same day is `2026.11.28.2`). Once, a few seconds
+  after it opens, the app asks GitHub which release is the latest (nothing about the computer or the
+  service goes with that). If a newer one is out, the operator page shows a quiet line with one
+  button to the download page; "Not now" hides it. Offline or no answer just means no line.
 
 - The Mac and Windows builds are not signed yet. macOS and Windows both warn on first open; the
   Sunday checklist says how to get past it.

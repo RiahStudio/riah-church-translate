@@ -21,6 +21,15 @@ html, body {
 .chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: flex-end; }
 .chips [hidden] { display: none; }
 
+.update-note {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  margin: 0 0 14px; padding: 8px 12px;
+  border: 1px solid var(--riah-line, rgba(255, 255, 255, 0.14)); border-radius: 8px;
+  color: var(--riah-body); font: 400 var(--riah-text-small)/1.45 var(--riah-font-ui);
+}
+.update-note[hidden] { display: none; }
+.update-note span { flex: 1 1 auto; }
+
 .grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);

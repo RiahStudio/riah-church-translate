@@ -596,6 +596,31 @@ def test_send_problem_sends_once_or_saves_a_file():
         assert g["sent"] is False and g["saved"] is False and g["text"]
 
 
+def test_a_person_s_report_goes_to_the_studio_inbox():
+    """Their send is the same small JSON the inbox takes: kind user, no key; it counts as sent only on
+    the studio's own {"ok": true} (201), and a 503 or anything else saves the file instead."""
+    with tempfile.TemporaryDirectory() as d:
+        ok = Studio(status=201, body=b'{"ok":true}')
+        try:
+            r = Reporter(ok.url)
+            r.event("bad_pass", caught(), recovered=True)
+            a = r.send_problem(Path(d) / "out")
+            assert a["sent"] is True, a
+            (auth, got), = ok.got
+            assert auth is None and got["kind"] == "user" and got["problems"][0]["kind"] == "bad_pass", got
+            assert "sermon" not in json.dumps(got)
+        finally:
+            ok.close()
+        shut = Studio(status=503, body=b'{"ok":false}')
+        try:
+            r2 = Reporter(shut.url)
+            r2.event("bad_pass", caught(), recovered=True)
+            b = r2.send_problem(Path(d) / "out2")
+            assert b["sent"] is False and b["saved"] is True, b
+        finally:
+            shut.close()
+
+
 def test_problem_report_through_the_app_server():
     """Only this computer can read or send it, and the send is a JSON POST like every other change."""
     import socket
