@@ -132,9 +132,17 @@ class App(Api):
         snap = self.hub.snapshot()
         snap.update(settings={k: v for k, v in self.settings.data.items() if k != "display"},
                     glossary=self.settings.glossary, running=self.engine.running, version=__version__,
+                    engine=self.engine_mode(),
                     canOpenWindow=self.open_screen_hook is not None, notes=self.notes_info,
                     lanUrl=f"http://{_lan_ip()}:{self.args.port}/screen" if self.args.lan else None)
         return snap
+
+    def engine_mode(self):
+        """Where the speech engine runs: its own process (the default), or inside the app (the fallback)."""
+        e = self.engine
+        if not hasattr(e, "inline"):
+            return "inline"
+        return "inline" if e.inline is not None else ("process" if e.ready else "starting")
 
     def devices(self):
         from .audio import list_input_devices
