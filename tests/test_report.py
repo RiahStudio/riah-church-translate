@@ -77,7 +77,7 @@ class Studio:
                     pass                                 # the app already gave up waiting
 
         self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), H)
-        self.url = f"http://127.0.0.1:{self.httpd.server_address[1]}/api/ct-watch/report"
+        self.url = f"http://127.0.0.1:{self.httpd.server_address[1]}/api/talk"
         threading.Thread(target=self.httpd.serve_forever, daemon=True).start()
 
     def close(self):
@@ -466,6 +466,23 @@ def test_no_key_anywhere():
         r.stop_thread()
 
 
+def test_the_studio_s_private_site_is_nowhere_in_the_app():
+    # Church Translate is public and lives on riahstudio.com only (Captain, 2026-11-28): "make sure
+    # that the private site isn't anywhere". Every file that ships or is published is checked.
+    private = "riah" + "reckless"
+    root = Path(report.__file__).resolve().parents[1]
+    skip = {".git", ".pytest_cache", "__pycache__", "node_modules", "dist", "build", ".venv", "venv"}
+    found = []
+    for p in root.rglob("*"):
+        if p.is_file() and not skip.intersection(p.relative_to(root).parts) and p.stat().st_size < 2_000_000:
+            try:
+                if private in p.read_text(encoding="utf-8", errors="ignore").lower():
+                    found.append(str(p.relative_to(root)))
+            except OSError:
+                pass
+    assert found == [], found
+
+
 SECRETS = ("sermon", "John", "pastor", "Users", "secret", "Documents", "Claude Cowork", "\\")
 
 
@@ -596,24 +613,28 @@ def test_send_problem_sends_once_or_saves_a_file():
         assert g["sent"] is False and g["saved"] is False and g["text"]
 
 
-def test_a_person_s_report_goes_to_the_studio_inbox():
-    """Their send is the same small JSON the inbox takes: kind user, no key; it counts as sent only on
-    the studio's own {"ok": true} (201), and a 503 or anything else saves the file instead."""
+def test_a_person_s_report_goes_to_the_studio_form():
+    """Their send is the plain text they were shown, to riahstudio.com's form, marked as the app's so
+    the site files it and emails nobody. No key; it counts as sent only on the form's own
+    {"ok": true}, and a 503 or anything else saves the file instead."""
+    assert report.TALK_URL == "https://riahstudio.com/api/talk" and report.URL == ""
     with tempfile.TemporaryDirectory() as d:
-        ok = Studio(status=201, body=b'{"ok":true}')
+        ok = Studio(status=200, body=b'{"ok":true,"filed":true}')
         try:
-            r = Reporter(ok.url)
+            r = Reporter(talk_url=ok.url)
             r.event("bad_pass", caught(), recovered=True)
             a = r.send_problem(Path(d) / "out")
             assert a["sent"] is True, a
             (auth, got), = ok.got
-            assert auth is None and got["kind"] == "user" and got["problems"][0]["kind"] == "bad_pass", got
+            assert auth is None and set(got) == {"message", "show", "website"}, got
+            assert got["show"] == "Riah Church Translate app" and got["website"] == ""
+            assert got["message"] == a["text"] and got["message"].startswith("Riah Church Translate problem report")
             assert "sermon" not in json.dumps(got)
         finally:
             ok.close()
         shut = Studio(status=503, body=b'{"ok":false}')
         try:
-            r2 = Reporter(shut.url)
+            r2 = Reporter(talk_url=shut.url)
             r2.event("bad_pass", caught(), recovered=True)
             b = r2.send_problem(Path(d) / "out2")
             assert b["sent"] is False and b["saved"] is True, b

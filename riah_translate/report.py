@@ -26,10 +26,10 @@ it. When the send doesn't go through, the same text is saved as a file (Download
 to email or message to the studio.
 
 No key, and nothing to set up (Captain, 2026-11-27): every build can send. A person's report goes to
-the studio's report inbox: filed, size-capped and rate-limited,
-and nobody is messaged; the studio fixes what comes in and releases a new dated version (Captain,
-2026-11-28). The tick-box that sent reports on its own is gone (Captain: reports are something the
-user sends); the code for it stays dormant.
+the studio's own form on riahstudio.com (/api/talk) as its plain text, size-capped and rate-limited.
+The studio files it and nobody is emailed or messaged; the studio fixes what comes in and releases a
+new dated version (Captain, 2026-11-27/28). The tick-box that sent reports on its own is gone
+(Captain: reports are something the user sends); the code for it stays dormant, with no address.
 
 Sending can never touch the service: a small queue, one background thread, a 5-second timeout,
 and anything that goes wrong is dropped.
@@ -52,10 +52,12 @@ from pathlib import Path
 
 from . import __version__
 
-URL = os.environ.get("RIAH_TRANSLATE_REPORT_URL") or ""
-# A person's problem report goes to the same studio inbox, no key and nobody gets a message: it is filed
-# and the studio fixes it and releases a new dated version (Captain, 2026-11-28).
-TALK_MAX = 1800              # what the readable text of a report may hold
+URL = os.environ.get("RIAH_TRANSLATE_REPORT_URL") or ""   # the dormant tick-box sender: no address, nothing goes
+# A person's problem report goes to the studio's own form on riahstudio.com. No key, and nobody gets a
+# message: it is filed, and the studio fixes it and releases a new dated version (Captain, 2026-11-27/28).
+TALK_URL = os.environ.get("RIAH_TRANSLATE_TALK_URL") or "https://riahstudio.com/api/talk"
+TALK_SHOW = "Riah Church Translate app"   # how the site knows to file it rather than email it
+TALK_MAX = 1800              # the form keeps 2000 characters
 
 WAIT_BACK_SEC = 120          # a restart waits this long to say "and it's back up" in the same report
 TIMEOUT = 5                  # seconds; a report that can't go out in time is dropped
@@ -160,6 +162,8 @@ def _ssl_context():
 def post(url: str, payload: dict, timeout: float = TIMEOUT, want_ok: bool = False) -> bool:
     """One report out. True if the studio took it; never raises. With want_ok, only the studio's own
     {"ok": true} counts, so a sign-in page or any other 2xx on the way is never taken for "sent"."""
+    if not url:
+        return False
     try:
         body = json.dumps(payload, separators=(",", ":")).encode("utf-8")
         req = urllib.request.Request(url, data=body, method="POST", headers={
@@ -313,11 +317,15 @@ def save_text(folder: Path, text: str, when: datetime) -> Path | None:
 
 
 class Reporter:
-    def __init__(self, url: str = URL, send=None, clock=time.monotonic, send_user=None):
+    def __init__(self, url: str = URL, send=None, clock=time.monotonic, send_user=None, talk_url: str | None = None):
         self.url = url
         self.send = send or (lambda payload: post(self.url, payload))
-        # A person's report: True only if the studio filed it (its own {"ok": true}).
-        self.send_user = send_user or (lambda payload: post(self.url, payload, timeout=USER_TIMEOUT, want_ok=True))
+        # A person's report, as the plain text they were shown: True only if the studio filed it
+        # (the form's own {"ok": true}).
+        self.talk_url = talk_url or TALK_URL
+        self.send_user = send_user or (lambda payload: post(
+            self.talk_url, {"message": problem_text(payload), "show": TALK_SHOW, "website": ""},
+            timeout=USER_TIMEOUT, want_ok=True))
         self.clock = clock
         self.on = False
         self.folder: Path | None = None
