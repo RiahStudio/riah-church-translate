@@ -1,0 +1,86 @@
+{"type": "partial", "text": "Good morning.", "at": 2.95}
+{"type": "partial", "text": "Good morning, Church. It is a good day.", "at": 4.01}
+{"type": "partial", "text": "It is so good to see all of you.", "at": 5.12}
+{"type": "line", "id": 1, "src": "Good morning, Church.", "start": 0.0, "end": 1.44, "at": 5.12, "lag": 3.68}
+{"type": "translation", "id": 1, "dst": "早上好,教会.", "at": 5.85, "lag": 4.41, "mtSec": 0.73}
+{"type": "partial", "text": "It is so good to see all of you here today.", "at": 6.23}
+{"type": "partial", "text": "", "at": 7.39}
+{"type": "line", "id": 2, "src": "It is so good to see all of you here today.", "start": 2.66, "end": 5.0, "at": 7.39, "lag": 2.39}
+{"type": "translation", "id": 2, "dst": "很高兴看到你们今天在这里.", "at": 8.36, "lag": 3.36, "mtSec": 0.97}
+{"type": "partial", "text": "Please open.", "at": 8.46}
+{"type": "partial", "text": "Please open your Bibles with meat.", "at": 9.52}
+{"type": "partial", "text": "Please open your Bibles with me to the Gospel of JU.", "at": 10.65}
+{"type": "partial", "text": "Please open your Bibles with me to the Gospel of John. Chapter", "at": 12.63}
+{"type": "partial", "text": "Please open your Bibles with me to the Gospel of John, Chapter 3.", "at": 14.72}
+{"type": "partial", "text": "Jesus is talking with a man named N.", "at": 15.91}
+{"type": "line", "id": 3, "src": "Please open your Bibles with me to the Gospel of John, Chapter 3.", "start": 5.0, "end": 11.01, "at": 15.91, "lag": 4.9}
+{"type": "translation", "id": 3, "dst": "请和我一起打开圣经,看约翰福音第三章.", "at": 17.29, "lag": 6.28, "mtSec": 1.37}
+{"type": "partial", "text": "Jesus is talking with a man named Nicodemus. A", "at": 17.82}
+{"type": "partial", "text": "Jesus is talking with a man named Nicodemus, a teacher who came to him at night.", "at": 19.97}
+{"type": "partial", "text": "Nicodemus...", "at": 21.23}
+{"type": "line", "id": 4, "src": "Jesus is talking with a man named Nicodemus, a teacher who came to him at night.", "start": 11.01, "end": 17.61, "at": 21.23, "lag": 3.62}
+{"type": "translation", "id": 4, "dst": "耶稣正在和一个叫尼哥底马的老师说话.", "at": 25.58, "lag": 7.97, "mtSec": 4.35}
+{"type": "partial", "text": "Nicodemus had questions.", "at": 22.32}
+{"type": "partial", "text": "Nicodemus had questions, and Jesus did not.", "at": 24.24}
+{"type": "partial", "text": "Nicodemus had questions, and Jesus did not send him away.", "at": 26.31}
+{"type": "partial", "text": "That is the first thing I want. one.", "at": 28.4}
+{"type": "line", "id": 5, "src": "Nicodemus had questions, and Jesus did not send him away.", "start": 18.48, "end": 23.04, "at": 28.4, "lag": 5.36}
+{"type": "translation", "id": 5, "dst": "尼哥底摩有问题,耶稣没有把他赶走.", "at": 29.69, "lag": 6.65, "mtSec": 1.29}
+{"type": "partial", "text": "That is the first thing I want you to see this morning.", "at": 29.49}
+{"type": "partial", "text": "You can bring your qu", "at": 30.62}
+{"type": "line", "id": 6, "src": "That is the first thing I want you to see this morning.", "start": 24.45, "end": 27.35, "at": 30.62, "lag": 3.27}
+{"type": "translation", "id": 6, "dst": "这就是我今天早上想要你看到的第一件事.", "at": 31.84, "lag": 4.49, "mtSec": 1.22}
+{"type": "partial", "text": "You can bring your questions to God.", "at": 31.64}
+{"type": "partial", "text": "", "at": 32.67}
+{"type": "line", "id": 7, "src": "You can bring your questions to God.", "start": 27.35, "end": 30.29, "at": 32.67, "lag": 2.38}
+{"type": "translation", "id": 7, "dst": "您可以向上帝提出问题.", "at": 33.42, "lag": 3.13, "mtSec": 0.74}
+{"type": "partial", "text": "In verse 16 and in verse 16", "at": 35.96}
+{"type": "partial", "text": "In verse 16, Jesus says that God so loved the world that...", "at": 37.01}
+{"type": "partial", "text": "In verse 16, Jesus says that God so loved the world that he gave his one and...", "at": 38.11}
+{"type": "partial", "text": "In verse 16, Jesus says that God so loved the world that he gave his one and only son.", "at": 39.23}
+{"type": "partial", "text": "", "at": 42.7}
+{"type": "line", "id": 8, "src": "In verse 16, Jesus says that God so loved the world that he gave his one and only son.", "start": 30.29, "end": 37.54, "at": 42.7, "lag": 5.16}
+{"type": "translation", "id": 8, "dst": "在第16节,耶稣说上帝如此爱世界,以至于献出他独生之子.", "at": 44.65, "lag": 7.11, "mtSec": 1.94}
+{"type": "partial", "text": "Notice that the verse begins with love. It does.", "at": 44.51}
+{"type": "partial", "text": "It does not begin with our success or", "at": 46.36}
+{"type": "line", "id": 9, "src": "Notice that the verse begins with love.", "start": 37.54, "end": 41.12, "at": 46.36, "lag": 5.24}
+{"type": "translation", "id": 9, "dst": "这段经文的开头是爱.", "at": 48.31, "lag": 7.19, "mtSec": 1.95}
+{"type": "partial", "text": "", "at": 49.71}
+{"type": "line", "id": 10, "src": "It does not begin with our success or our failure.", "start": 42.24, "end": 44.92, "at": 49.71, "lag": 4.79}
+{"type": "translation", "id": 10, "dst": "它不是从我们的成功或失败开始的.", "at": 50.62, "lag": 5.7, "mtSec": 0.9}
+{"type": "partial", "text": "Some of you came here tired this week.", "at": 50.73}
+{"type": "partial", "text": "Here. Some of you came here tired this week. Some of you came", "at": 52.28}
+{"type": "partial", "text": "Some of you came here carrying grief. brief.", "at": 53.91}
+{"type": "line", "id": 11, "src": "Some of you came here tired this week.", "start": 46.61, "end": 48.67, "at": 53.91, "lag": 5.24}
+{"type": "translation", "id": 11, "dst": "你们中的一些人本周来这里很累.", "at": 55.68, "lag": 7.01, "mtSec": 1.77}
+{"type": "partial", "text": "Here this.", "at": 55.79}
+{"type": "line", "id": 12, "src": "Some of you came here carrying grief.", "start": 49.75, "end": 51.63, "at": 55.79, "lag": 4.16}
+{"type": "translation", "id": 12, "dst": "你们中的一些人带着悲伤来到这里.", "at": 56.77, "lag": 5.14, "mtSec": 0.98}
+{"type": "partial", "text": "Here this clearly. The love of a...", "at": 57.78}
+{"type": "partial", "text": "The love of God is not a reward for good people.", "at": 59.65}
+{"type": "line", "id": 13, "src": "Here this clearly.", "start": 53.08, "end": 54.1, "at": 59.65, "lag": 5.55}
+{"type": "translation", "id": 13, "dst": "这里很清楚.", "at": 60.24, "lag": 6.14, "mtSec": 0.59}
+{"type": "partial", "text": "It is a gift. if you want to see more videos on how to make a video.", "at": 61.61}
+{"type": "line", "id": 14, "src": "The love of God is not a reward for good people.", "start": 55.31, "end": 57.79, "at": 61.61, "lag": 3.82}
+{"type": "translation", "id": 14, "dst": "对于善人来说,上帝的爱不是奖励.", "at": 64.09, "lag": 6.3, "mtSec": 2.48}
+{"type": "partial", "text": "", "at": 65.08}
+{"type": "line", "id": 15, "src": "It is a gift for all people.", "start": 57.79, "end": 60.39, "at": 65.08, "lag": 4.69}
+{"type": "translation", "id": 15, "dst": "它是所有人的礼物.", "at": 65.76, "lag": 5.37, "mtSec": 0.68}
+{"type": "partial", "text": "So when we leave this building today. Let us care. here.", "at": 67.24}
+{"type": "partial", "text": "So when we leave this building today, let us carry that love into Chang Mai.", "at": 68.36}
+{"type": "partial", "text": "Let us.", "at": 70.49}
+{"type": "line", "id": 16, "src": "So when we leave this building today, let us carry that love into Chang Mai.", "start": 61.86, "end": 66.42, "at": 70.49, "lag": 4.07}
+{"type": "translation", "id": 16, "dst": "所以当我们今天离开这座大楼时, 让我们把爱带到长迈.", "at": 72.37, "lag": 5.95, "mtSec": 1.88}
+{"type": "partial", "text": "Let us be patient with our families.", "at": 71.61}
+{"type": "partial", "text": "Let us be patient with our families, honest at work.", "at": 73.67}
+{"type": "partial", "text": "Let us be patient with our families, honest at work, and kind to strangers.", "at": 74.84}
+{"type": "partial", "text": "", "at": 76.01}
+{"type": "line", "id": 17, "src": "Let us be patient with our families, honest at work, and kind to strangers.", "start": 66.42, "end": 72.92, "at": 76.01, "lag": 3.09}
+{"type": "translation", "id": 17, "dst": "让我们对家人有耐心,在工作中诚实,向陌生人表现善良.", "at": 78.14, "lag": 5.22, "mtSec": 2.13}
+{"type": "partial", "text": "Let us pray together.", "at": 77.07}
+{"type": "partial", "text": "Let us pray together before we sing.", "at": 78.13}
+{"type": "partial", "text": "", "at": 79.28}
+{"type": "line", "id": 18, "src": "Let us pray together before we sing.", "start": 74.51, "end": 76.91, "at": 79.28, "lag": 2.37}
+{"type": "translation", "id": 18, "dst": "让我们在唱歌之前一起祈祷.", "at": 80.27, "lag": 3.36, "mtSec": 0.99}
+{"type": "partial", "text": "", "at": 81.16}
+{"type": "summary", "model": "base.en", "audioSec": 78.5, "asrBusySec": 80.2, "realtimeFactor": 1.02, "lines": 18}

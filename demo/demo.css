@@ -1,0 +1,184 @@
+/* The public demo page: one ruled column like Riah Usage, the church screen as the hero. */
+html { background: var(--riah-bg); }
+
+body {
+  margin: 0;
+  color: var(--riah-body);
+  background: var(--riah-bg);
+  font: 400 var(--riah-text-body)/1.5 var(--riah-font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+body.no-scroll { overflow: hidden; }
+
+.page {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 16px 16px 0;
+  border-left: 1px solid var(--riah-rule);
+  border-right: 1px solid var(--riah-rule);
+}
+
+main { flex: 1; }
+
+a { color: var(--riah-ink); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--riah-pink); outline-offset: 2px; }
+
+/* Small Mono caps pill, as in the Usage header. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--riah-rule-strong);
+  border-radius: 999px;
+  color: var(--riah-body);
+  background: transparent;
+  font: 700 var(--riah-text-label)/1 var(--riah-font-data);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color var(--riah-speed) ease, color var(--riah-speed) ease;
+}
+/* The pill stays small to the eye; its hit area is the full 44px. */
+.pill { position: relative; }
+.pill::after { content: ""; position: absolute; inset: -6px 0; }
+.pill:hover { border-color: var(--riah-ink); color: var(--riah-ink); }
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 0 0;
+}
+
+h1 {
+  margin: 24px 0 16px;
+  color: var(--riah-ink);
+  font: 600 var(--riah-text-section)/1.2 var(--riah-font-ui);
+  letter-spacing: -0.01em;
+}
+
+/* ---------------------------------------------------------------- the screen */
+.frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--riah-rule-strong);
+  border-radius: 8px;
+  background: #000;
+}
+
+.frame iframe { display: block; width: 100%; height: 100%; border: 0; }
+
+.frame .exit { display: none; }
+
+/* Full screen where the browser can't do it for a frame (iPhone): fill the window. */
+.player.is-filled .frame {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+}
+
+.player.is-filled .exit {
+  display: block;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.langs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.langs .riah-label { margin-right: 4px; }
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--riah-rule);
+  border-radius: var(--riah-radius-control);
+  color: var(--riah-dim);
+  background: transparent;
+  font: 700 var(--riah-text-small)/1 var(--riah-font-ui);
+  cursor: pointer;
+  transition: border-color var(--riah-speed) ease, color var(--riah-speed) ease;
+}
+
+/* A small box that fills in when the language is on. */
+.toggle::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+}
+
+.toggle:hover { border-color: var(--riah-rule-strong); color: var(--riah-ink); }
+.toggle[aria-pressed="true"] { border-color: var(--riah-ink); color: var(--riah-ink); }
+.toggle[aria-pressed="true"]::before { background: currentColor; }
+
+.caption { margin: 8px 0 0; color: var(--riah-dim); font-size: var(--riah-text-small); }
+.caption:empty { display: none; }
+
+/* ---------------------------------------------------------------- facts: ruled rows */
+.rows {
+  margin: 32px 0 24px;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--riah-rule);
+  border-radius: 8px;
+  background: var(--riah-surface);
+}
+
+.rows li {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 16px;
+  color: var(--riah-ink);
+  font-size: var(--riah-text-small);
+}
+
+.rows li + li { border-top: 1px solid var(--riah-rule); }
+
+@media (max-width: 480px) {
+  .rows li { grid-template-columns: 1fr; gap: 4px; }
+}
+
+footer.riah-fine {
+  margin: 0 -16px;
+  padding: 12px 16px;
+  text-align: right;
+}
+
+footer a { display: inline-block; margin: -14px 0; padding: 14px 0; color: var(--riah-body); text-decoration: none; }
+footer a:hover { color: var(--riah-ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  .toggle, .pill { transition: none; }
+}
+
+/* The corner labels only where the margin beside the column has room for them. */
+@media (max-width: 1359px) { .riah-slug { display: none; } }

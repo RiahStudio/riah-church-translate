@@ -1,0 +1,143 @@
+# Builds the Mac app twice, for Apple silicon (M1 and later) and for Intel Macs, and tests each
+# built app on the recorded sermon. Run by hand from the Actions tab (or: gh workflow run
+# mac-build.yml). Downloads: the "Riah-Church-Translate-mac" (Apple silicon) and
+# "Riah-Church-Translate-mac-intel" artifacts. Not signed by Apple yet, so the first open needs
+# System Settings > Privacy & Security > Open Anyway.
+name: Mac build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mac-build
+  cancel-in-progress: true
+
+jobs:
+  mac:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15          # Apple silicon
+            name: mac
+          - runner: macos-15-intel    # Intel
+            name: mac-intel
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-*.txt
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-app.txt "pyinstaller>=6.10,<7"
+          brew install librsvg
+
+      # pip takes the newest library builds, and some of those (numpy, PyAV, ONNX Runtime) only run on
+      # macOS 13 or 14. Swap them for the newest builds that run on macOS 11, so an older church Mac
+      # can run the app too. The check after the build fails if anything still needs newer.
+      - name: Library builds that run on macOS 11 and up
+        run: |
+          pip download --no-deps --only-binary=:all: --platform "macosx_11_0_$(uname -m)" \
+            --python-version 3.12 --implementation cp -d old-mac-wheels numpy av onnxruntime
+          ls old-mac-wheels
+          pip install --no-deps --force-reinstall old-mac-wheels/*.whl
+          pip check > pip-check.txt || true
+          cat pip-check.txt
+          # The older ONNX Runtime lists coloredlogs and sympy for its model tools, which the app never loads.
+          ! grep -v -e "requires coloredlogs" -e "requires sympy" -e "No broken requirements" pip-check.txt | grep -q .
+
+      - name: App icon
+        run: bash packaging/make-icns.sh
+
+      - name: License texts for every bundled library
+        run: |
+          pip install "pip-licenses>=5,<6"
+          pip-licenses --from=mixed --with-license-file --no-license-path --format=plain-vertical --ignore-packages pip-licenses prettytable wcwidth pyinstaller pyinstaller-hooks-contrib altgraph macholib --output-file riah_translate/web/THIRD-PARTY-NOTICES.txt
+          grep -q "faster-whisper" riah_translate/web/THIRD-PARTY-NOTICES.txt
+
+      - name: Crash-report key (no secret means crash reports stay off in this build)
+        shell: bash
+        env:
+          KEY: ${{ secrets.RIAH_TRANSLATE_REPORT_KEY }}
+        run: |
+          if [ -n "$KEY" ]; then printf '%s\n' "$KEY" > riah_translate/report-key.txt; echo "key added"; else echo "no key: crash reports stay off"; fi
+
+      - name: Build the app
+        run: pyinstaller --noconfirm packaging/riah-translate.spec
+
+      - name: Oldest macOS every bundled library runs on
+        run: |
+          uname -m
+          find "dist/Riah Church Translate.app" -type f \( -name "*.so" -o -name "*.dylib" -o -perm -u+x \) -print0 |
+            xargs -0 -n1 otool -l 2>/dev/null |
+            awk '/LC_BUILD_VERSION/{b=1} b&&/minos/{print $2; b=0} /LC_VERSION_MIN_MACOSX/{v=1} v&&/ version/{print $2; v=0}' |
+            sort -V | uniq -c | tail -4 | tee minos.txt
+          app=$(/usr/libexec/PlistBuddy -c "Print :LSMinimumSystemVersion" "dist/Riah Church Translate.app/Contents/Info.plist")
+          need=$(awk '{print $2}' minos.txt | sort -V | tail -1)
+          echo "app says macOS $app, its libraries need macOS $need"
+          test "$(printf '%s\n%s\n' "$need" "$app" | sort -V | tail -1)" = "$app"
+          test -f "dist/Riah Church Translate.app/Contents/Resources/riah_translate/bible_words.json" ||
+            test -f "dist/Riah Church Translate.app/Contents/Frameworks/riah_translate/bible_words.json"
+
+      - name: Cache the models the test downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Application Support/Riah Translate/models
+          key: rt-models-v1
+
+      - name: Check the app's logic (no models)
+        run: python tests/test_logic.py
+
+      - name: Test the built app on the recorded sermon (English to Thai and Chinese)
+        run: >
+          python tests/clip_test.py tests/clips/sermon-en.wav --script tests/clips/sermon-en.txt
+          --to th zh --hints "Chiang Mai, Nicodemus"
+          --app "dist/Riah Church Translate.app/Contents/MacOS/Riah Church Translate"
+          --out tests/results/${{ matrix.name }}-en-thzh.jsonl
+
+      - name: Test the built app's pages and audio library
+        run: |
+          APP="dist/Riah Church Translate.app/Contents/MacOS/Riah Church Translate"
+          "$APP" --ui none --port 5390 > app.log 2>&1 &
+          pid=$!
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:5390/api/state > /dev/null && break; sleep 1; done
+          curl -sf http://127.0.0.1:5390/ | grep -q "Riah Church Translate"
+          curl -sf http://127.0.0.1:5390/screen | grep -q 'id="rows"'
+          curl -sf http://127.0.0.1:5390/vendor/riah-interface.css | grep -q "riah"
+          curl -sf http://127.0.0.1:5390/licenses.html | grep -q "NLLB"
+          curl -sf http://127.0.0.1:5390/THIRD-PARTY-NOTICES.txt | grep -q "ctranslate2"
+          curl -sf http://127.0.0.1:5390/type/type.css | grep -q "Sarabun"
+          curl -sf -o /dev/null http://127.0.0.1:5390/type/sarabun-thai-600-normal.woff2
+          curl -sf http://127.0.0.1:5390/api/state | grep -q '"hidden": false'
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H 'Host: evil.example' http://127.0.0.1:5390/)" = 403
+          curl -sf http://127.0.0.1:5390/api/devices
+          echo
+          kill $pid
+          cat app.log
+
+      - name: Zip the app
+        run: ditto -c -k --keepParent "dist/Riah Church Translate.app" Riah-Church-Translate-${{ matrix.name }}.zip
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: Riah-Church-Translate-${{ matrix.name }}
+          path: Riah-Church-Translate-${{ matrix.name }}.zip
+          retention-days: 14
+
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: ${{ matrix.name }}-test-results
+          path: tests/results/${{ matrix.name }}-*.jsonl
+          retention-days: 14
+          if-no-files-found: ignore

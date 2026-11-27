@@ -1,0 +1,6 @@
+# Speech-to-text and translation engine (all MIT / Apache-2.0 / BSD code).
+faster-whisper>=1.2,<2        # MIT  (SYSTRAN) - Whisper on CTranslate2, includes Silero VAD
+ctranslate2>=4.5,<5           # MIT  (OpenNMT) - runs the NLLB translation model
+tokenizers>=0.20              # Apache-2.0 (Hugging Face) - NLLB tokenizer
+huggingface_hub>=0.25         # Apache-2.0 - first-run model download
+numpy>=1.26                   # BSD-3

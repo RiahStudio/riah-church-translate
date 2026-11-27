@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Riah {{product}} · live sermon subtitles</title>
+<meta name="description" content="Live Thai and Chinese subtitles for an English sermon, on the church screen. Free, and it runs on the church's own computer.">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="screen/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="screen/vendor/fonts/fonts.css">
+<link rel="stylesheet" href="screen/type/type.css">
+<link rel="stylesheet" href="screen/vendor/riah-interface.css">
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="riah-marks" aria-hidden="true">
+  <span class="riah-mark riah-mark--tl"></span><span class="riah-mark riah-mark--tr"></span>
+  <span class="riah-mark riah-mark--bl"></span><span class="riah-mark riah-mark--br"></span>
+  <span class="riah-slug riah-slug--tl">Sermon subtitles</span>
+  <span class="riah-slug riah-slug--br">{{initials}} · 2026</span>
+</div>
+
+<div class="page">
+  <header class="riah-header">
+    <span class="riah-lockup"><span class="riah-wordmark">Riah</span> <span class="riah-product-name">{{product}}</span></span>
+    <a class="pill" href="/churchtranslate/live/">Try it live</a>
+  </header>
+
+  <main>
+    <div class="bar">
+      <span class="riah-status">Demo · recorded sermon</span>
+      <button type="button" class="pill" id="restart">Start over</button>
+    </div>
+
+    <h1>Live Thai subtitles for an English sermon.</h1>
+
+    <section class="player" id="player" aria-label="Demo of the church screen">
+      <div class="frame">
+        <iframe id="screen" src="screen/screen.html" title="The church screen, playing a recorded test sermon"></iframe>
+        <button type="button" class="riah-button exit" id="exit">Exit</button>
+      </div>
+      <div class="controls">
+        <div class="langs" role="group" aria-labelledby="langs-label">
+          <span class="riah-label" id="langs-label">On screen</span>
+          <button type="button" class="toggle" data-lang="en" aria-pressed="true">English</button>
+          <button type="button" class="toggle" data-lang="th" aria-pressed="true"><span lang="th">ไทย</span> Thai</button>
+          <button type="button" class="toggle" data-lang="zh" aria-pressed="false"><span lang="zh">中文</span> Chinese</button>
+        </div>
+        <button type="button" class="riah-button riah-button--primary" id="full">Full screen</button>
+      </div>
+      <p class="caption" id="caption" aria-live="polite"></p>
+    </section>
+
+    <ul class="rows" aria-label="About the app">
+      <li><span class="riah-label">Try it</span><span>In Chrome or Edge, free, for English sermons.</span></li>
+      <li><span class="riah-label">App</span><span>For the church's Mac or Windows PC. In testing now.</span></li>
+      <li><span class="riah-label">Offline</span><span>The app needs no internet during the service.</span></li>
+      <li><span class="riah-label">Slides</span><span>The app can sit as a bar under the slides.</span></li>
+      <li><span class="riah-label">Sound</span><span>The sound desk's USB, or any microphone.</span></li>
+      <li><span class="riah-label">Notes</span><span>Add sermon notes and it listens for the names in them.</span></li>
+      <li><span class="riah-label">Quality</span><span>Machine translation: good to follow along, not word-perfect.</span></li>
+    </ul>
+  </main>
+
+  <footer class="riah-fine">Made by <a href="https://riahstudio.com/">Riah Studio</a></footer>
+</div>
+<script src="demo.js"></script>
+</body>
+</html>

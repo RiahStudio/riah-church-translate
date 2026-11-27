@@ -1,0 +1,139 @@
+# Builds the Windows app (Windows 10 and 11, 64-bit) and tests the built app on the recorded sermon,
+# its pages, and its own window. Run by hand from the Actions tab (or: gh workflow run
+# windows-build.yml). Download: the "Riah-Church-Translate-windows" artifact. Not signed yet, so the first
+# open shows "Windows protected your PC": More info > Run anyway.
+name: Windows build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-build
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      APP: dist/Riah Church Translate/Riah Church Translate.exe
+      PYTHONIOENCODING: utf-8
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-*.txt
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-app.txt "pyinstaller>=6.10,<7"
+          python -c "import clr, webview; print('pythonnet and pywebview ok')"
+
+      - name: License texts for every bundled library
+        run: |
+          pip install "pip-licenses>=5,<6"
+          pip-licenses --from=mixed --with-license-file --no-license-path --format=plain-vertical --ignore-packages pip-licenses prettytable wcwidth pyinstaller pyinstaller-hooks-contrib altgraph pefile pywin32-ctypes --output-file riah_translate/web/THIRD-PARTY-NOTICES.txt
+          grep -q "faster-whisper" riah_translate/web/THIRD-PARTY-NOTICES.txt
+          grep -q "pythonnet" riah_translate/web/THIRD-PARTY-NOTICES.txt
+
+      - name: Crash-report key (no secret means crash reports stay off in this build)
+        shell: bash
+        env:
+          KEY: ${{ secrets.RIAH_TRANSLATE_REPORT_KEY }}
+        run: |
+          if [ -n "$KEY" ]; then printf '%s\n' "$KEY" > riah_translate/report-key.txt; echo "key added"; else echo "no key: crash reports stay off"; fi
+
+      - name: Build the app
+        run: pyinstaller --noconfirm packaging/riah-translate.spec
+
+      - name: Everything the app needs is inside it
+        run: |
+          ls "dist/Riah Church Translate"
+          find "dist/Riah Church Translate" -name bible_words.json | grep -q .
+          find "dist/Riah Church Translate" -iname "WebView2Loader.dll" | grep -q .
+          find "dist/Riah Church Translate" -iname "Python.Runtime.dll" | grep -q .
+          find "dist/Riah Church Translate" -iname "*portaudio*.dll" | grep -q .
+
+      - name: Cache the models the test downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/AppData/Roaming/Riah Translate/models
+          key: rt-models-win-v1
+
+      - name: Check the app's logic (no models)
+        run: python tests/test_logic.py
+
+      - name: Test the built app on the recorded sermon (English to Thai and Chinese)
+        run: >
+          python tests/clip_test.py tests/clips/sermon-en.wav --script tests/clips/sermon-en.txt
+          --to th zh --hints "Chiang Mai, Nicodemus" --app "$APP"
+          --out tests/results/windows-en-thzh.jsonl
+
+      - name: Test the built app's pages and audio library
+        run: |
+          "$APP" --ui none --port 5390 > app.log 2>&1 &
+          pid=$!
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:5390/api/state > /dev/null && break; sleep 1; done
+          curl -sf http://127.0.0.1:5390/ | grep -q "Riah Church Translate"
+          curl -sf http://127.0.0.1:5390/screen | grep -q 'id="rows"'
+          curl -sf http://127.0.0.1:5390/vendor/riah-interface.css | grep -q "riah"
+          curl -sf http://127.0.0.1:5390/licenses.html | grep -q "NLLB"
+          curl -sf http://127.0.0.1:5390/THIRD-PARTY-NOTICES.txt | grep -q "ctranslate2"
+          curl -sf http://127.0.0.1:5390/type/type.css | grep -q "Sarabun"
+          curl -sf -o /dev/null http://127.0.0.1:5390/type/sarabun-thai-600-normal.woff2
+          curl -sf http://127.0.0.1:5390/api/state | grep -q '"wakeLock": true'
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H 'Host: evil.example' http://127.0.0.1:5390/)" = 403
+          curl -sf http://127.0.0.1:5390/api/devices
+          echo
+          kill $pid || taskkill //F //PID $pid || true
+          cat app.log
+
+      - name: Zip the app
+        run: cd dist && 7z a -tzip -mx=5 ../Riah-Church-Translate-windows.zip "Riah Church Translate"
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: Riah-Church-Translate-windows
+          path: Riah-Church-Translate-windows.zip
+          retention-days: 14
+
+      # The real app window (Edge WebView2), as the church PC would open it. A picture of the screen
+      # goes into the test results.
+      - name: Open the app window
+        run: |
+          mkdir -p tests/results
+          "$APP" --port 5391 > window.log 2>&1 &
+          pid=$!
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:5391/api/state > /dev/null && break; sleep 1; done
+          sleep 15
+          cat window.log
+          if grep -q "No app window" window.log; then echo "The app fell back to the browser"; exit 1; fi
+          tasklist //FI "IMAGENAME eq Riah Church Translate.exe" | grep -q "Riah Church Translate"
+          powershell -NoProfile -Command '
+            Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+            $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+            $img = New-Object System.Drawing.Bitmap $b.Width, $b.Height
+            [System.Drawing.Graphics]::FromImage($img).CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
+            $img.Save("tests/results/windows-window.png")'
+          taskkill //F //IM "Riah Church Translate.exe" || true
+
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: windows-test-results
+          path: |
+            tests/results/windows-*.jsonl
+            tests/results/windows-window.png
+          retention-days: 14
+          if-no-files-found: ignore

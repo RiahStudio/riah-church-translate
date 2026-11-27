@@ -1,0 +1,6 @@
+# The full app: engine + microphone + its own windows.
+-r requirements-engine.txt
+sounddevice>=0.5,<1           # MIT - microphone / sound-desk input (bundles PortAudio on Mac and Windows)
+pywebview>=5.3,<7             # BSD-3 - native app windows (WKWebView on the Mac, Edge WebView2 on Windows)
+pypdf>=7.1,<8                 # BSD-3 - reads sermon notes saved as PDF (pure Python, no other parts)
+# Building the Mac app also needs: pyinstaller>=6.10,<7  (GPL-2.0 with an exception that lets it ship closed apps)

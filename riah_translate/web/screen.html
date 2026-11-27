@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Church screen · Riah Church Translate</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="vendor/fonts/fonts.css">
+<link rel="stylesheet" href="type/type.css">
+<link rel="stylesheet" href="vendor/riah-interface.css">
+<link rel="stylesheet" href="screen.css">
+</head>
+<body>
+<main class="stage" id="stage">
+  <div class="labels" id="labels" aria-hidden="true"></div>
+  <div class="view" id="view" aria-live="off">
+    <div class="rows" id="rows"></div>
+  </div>
+  <div class="guides" id="guides" aria-hidden="true"></div>
+</main>
+<!-- Shown only while the app is stopped and the screen is empty. Live, or after "Clear the screen",
+     the projector stays black. -->
+<div class="standby" id="standby" aria-hidden="true">
+  <div class="riah-marks">
+    <span class="riah-mark riah-mark--tl"></span><span class="riah-mark riah-mark--tr"></span>
+    <span class="riah-mark riah-mark--bl"></span><span class="riah-mark riah-mark--br"></span>
+    <span class="riah-slug riah-slug--tl">Live subtitles</span>
+    <span class="riah-slug riah-slug--br">RCT · 2026</span>
+  </div>
+  <header class="riah-header standby-head">
+    <span class="riah-lockup"><span class="riah-wordmark">Riah</span> <span class="riah-product-name">Church Translate</span></span>
+  </header>
+  <p class="standby-note" id="standbyNote">Subtitles will appear here when the service starts.</p>
+</div>
+<span class="link-dot" id="linkDot" title="Reconnecting to Riah Church Translate"></span>
+<script src="screen.js"></script>
+</body>
+</html>

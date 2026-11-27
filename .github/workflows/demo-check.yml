@@ -1,0 +1,39 @@
+# Checks the public demo page in the browsers people use on Macs and PCs (Chrome/Edge, Safari's
+# WebKit, Firefox) at laptop and phone sizes. Run by hand from the Actions tab (or: gh workflow run
+# demo-check.yml). Pictures: the "demo-check" artifact.
+name: Demo check
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Page to check
+        default: https://riahstudio.com/churchtranslate
+
+permissions:
+  contents: read
+
+jobs:
+  browsers:
+    runs-on: ubuntu-24.04      # Playwright has no browsers for 26.04 yet
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Install the browsers
+        run: |
+          npm init -y > /dev/null
+          npm install --no-save playwright@1.58.2
+          npx playwright install --with-deps chromium firefox webkit
+      - name: Check the demo
+        env:
+          URL: ${{ inputs.url }}
+        run: node tools/demo_check.mjs "$URL"
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: demo-check
+          path: demo-check/
+          retention-days: 14

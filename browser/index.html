@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Riah Church Translate · live in the browser</title>
+<meta name="description" content="Live sermon subtitles and translation, in the browser.">
+<meta name="riah-version" content="dev">
+<link rel="icon" href="screen/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="screen/vendor/fonts/fonts.css">
+<link rel="stylesheet" href="screen/vendor/riah-interface.css">
+<link rel="stylesheet" href="live.css">
+<link rel="modulepreload" href="engine.js">
+</head>
+<body>
+<div class="riah-marks" aria-hidden="true">
+  <span class="riah-mark riah-mark--tl"></span><span class="riah-mark riah-mark--tr"></span>
+  <span class="riah-mark riah-mark--bl"></span><span class="riah-mark riah-mark--br"></span>
+  <span class="riah-slug riah-slug--tl">Live</span>
+  <span class="riah-slug riah-slug--br">RCT · 2026</span>
+</div>
+
+<div class="page">
+  <header class="riah-header">
+    <span class="riah-lockup"><span class="riah-wordmark">Riah</span> <span class="riah-product-name">Church Translate</span></span>
+    <a class="pill" href="../">Demo</a>
+  </header>
+
+  <div class="bar">
+    <span class="riah-status" id="status" role="status">Stopped</span>
+    <span class="riah-status riah-status--revise" id="hiddenChip" hidden>Subtitles hidden</span>
+  </div>
+
+  <section class="box notice" id="unsupported" hidden aria-labelledby="unsupported-h">
+    <h2 class="riah-label" id="unsupported-h">This browser can't run it</h2>
+    <p id="unsupportedWhat"></p>
+    <p>Use Chrome or Edge on a computer.</p>
+  </section>
+
+  <main>
+    <section class="box" aria-label="Service">
+      <div class="row">
+        <span class="riah-label">Languages</span>
+        <div class="pair">
+          <label class="field"><span class="riah-label">Spoken</span>
+            <select class="riah-input" id="src"></select></label>
+          <button class="riah-button swap-langs" id="swapLangs" type="button" aria-label="Swap the two languages">⇄</button>
+          <label class="field"><span class="riah-label">Into</span>
+            <select class="riah-input" id="tgt"></select></label>
+          <label class="field"><span class="riah-label">Also into</span>
+            <select class="riah-input" id="tgt2"><option value="">Nothing else</option></select></label>
+        </div>
+      </div>
+
+      <div class="row">
+        <span class="riah-label">Listen to</span>
+        <div class="stack">
+          <div class="pair two">
+            <label class="field"><span class="visually-hidden">Sound input</span>
+              <select class="riah-input" id="input"><option value="">Default microphone</option></select></label>
+            <label class="field" id="channelField" hidden><span class="visually-hidden">Channel</span>
+              <select class="riah-input" id="channel"></select></label>
+          </div>
+          <div class="meter" role="meter" aria-label="Sound level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="meter">
+            <span id="meterFill"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row go">
+        <div class="actions">
+          <button class="riah-button riah-button--primary start" id="startStop" type="button">Start</button>
+          <button class="riah-button" id="openScreen" type="button">Open church screen</button>
+        </div>
+        <p class="detail" id="detail" aria-live="polite"></p>
+        <div class="dl" id="dl" hidden><span id="dlFill"></span></div>
+        <p class="detail" id="progress" aria-live="polite"></p>
+        <p class="lag" id="lag" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section class="box" aria-labelledby="pv-h">
+      <div class="head">
+        <h2 class="riah-label" id="pv-h">Church screen</h2>
+        <div class="actions">
+          <button class="riah-button" id="hide" type="button" aria-pressed="false">Hide subtitles</button>
+          <button class="riah-button" id="clear" type="button">Clear</button>
+        </div>
+      </div>
+      <div class="preview" id="preview">
+        <iframe src="screen/screen.html" title="Church screen preview" tabindex="-1" id="previewFrame"></iframe>
+      </div>
+      <div class="pair two">
+        <label class="field"><span class="riah-label">Text size <output id="sizeOut">100%</output></span>
+          <input type="range" id="fontScale" min="0.6" max="1.6" step="0.05" value="1"></label>
+        <label class="field"><span class="riah-label">Lines</span>
+          <select class="riah-input" id="visibleRows">
+            <option value="2">2</option><option value="3">3</option><option value="4">4</option>
+            <option value="5">5</option><option value="6">6</option>
+          </select></label>
+      </div>
+      <div class="checks">
+        <label class="check"><input type="checkbox" id="showSrc"> Spoken words too</label>
+        <label class="check"><input type="checkbox" id="swap"> Translation on the left</label>
+        <label class="check"><input type="checkbox" id="labels"> Language names</label>
+        <label class="check"><input type="checkbox" id="wakeLock"> Keep screen awake</label>
+      </div>
+    </section>
+
+    <section class="box" aria-labelledby="words-h">
+      <h2 class="riah-label" id="words-h">Names to listen for</h2>
+      <textarea class="riah-input" id="hints" rows="2" placeholder="Pastor Somchai, Chiang Mai, Nicodemus, Ephesians"></textarea>
+      <div class="actions spread">
+        <div class="actions">
+          <label class="riah-button file-pick" for="notesFile">Add sermon notes</label>
+          <input type="file" id="notesFile" class="visually-hidden" accept=".docx,.txt,.md,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+          <button class="riah-button" id="saveHints" type="button">Save</button>
+        </div>
+        <span class="said"><span id="notesSaid" aria-live="polite"></span> <span id="hintsSaved" aria-live="polite"></span>
+          <button class="linkish" id="forgetNotes" type="button" hidden>Forget notes</button></span>
+      </div>
+
+      <details class="more">
+        <summary class="riah-label">More</summary>
+        <label class="field"><span class="riah-label">Speech model</span>
+          <select class="riah-input" id="model">
+            <option value="">Standard</option>
+            <option value="accurate">More accurate (strong graphics card)</option>
+          </select></label>
+        <label class="check"><input type="checkbox" id="churchWords"> Built-in church words</label>
+        <div class="actions"><button class="riah-button" id="saveTranscript" type="button" disabled>Save today's words</button></div>
+      </details>
+    </section>
+
+    <section class="box" id="rehearse" hidden aria-labelledby="rehearse-h">
+      <h2 class="riah-label" id="rehearse-h">Rehearse with a recording</h2>
+      <div class="pair two">
+        <label class="field"><span class="riah-label">Recording</span>
+          <input class="riah-input" type="file" id="rehearseFile" accept="audio/*,video/*"></label>
+        <label class="field"><span class="riah-label">Speed</span>
+          <select class="riah-input" id="rehearseSpeed">
+            <option value="1">As spoken</option><option value="2">Twice as fast</option>
+          </select></label>
+      </div>
+      <div class="actions"><button class="riah-button" id="rehearseGo" type="button">Rehearse</button></div>
+    </section>
+  </main>
+
+  <footer class="riah-fine foot">
+    <span id="version"></span>
+    <a href="licenses.html">Licenses</a>
+  </footer>
+</div>
+<script type="module" src="live.js"></script>
+</body>
+</html>

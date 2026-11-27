@@ -1,0 +1,110 @@
+{"type": "partial", "text": "Good morning.", "seg": 0, "at": 2.13}
+{"type": "partial", "text": "Good morning, Church. 8", "seg": 0, "at": 5.84}
+{"type": "line", "id": 1, "seg": 0, "src": "Good morning, Church.", "start": 0.0, "end": 1.44, "at": 8.23, "lag": 6.79, "keepDraft": false}
+{"type": "translation", "id": 1, "lang": "th", "dst": "อรุณสวัสดิ์ ชอร์ช", "at": 9.74, "lag": 8.3, "mtSec": 1.51}
+{"type": "translation", "id": 1, "lang": "zh", "dst": "早上好，教会。", "at": 9.74, "lag": 8.3, "mtSec": 1.51}
+{"type": "partial", "text": "It is so good to see all of you here today. Okay.", "seg": 1, "at": 8.23}
+{"type": "line", "id": 2, "seg": 1, "src": "It is so good to see all of you here today.", "start": 2.66, "end": 5.0, "at": 9.52, "lag": 4.52, "keepDraft": false}
+{"type": "translation", "id": 2, "lang": "th", "dst": "ดีใจที่ได้เห็นคุณทุกคนในวันนี้", "at": 11.4, "lag": 6.4, "mtSec": 1.66}
+{"type": "translation", "id": 2, "lang": "zh", "dst": "很高兴看到你们今天在这里。", "at": 11.4, "lag": 6.4, "mtSec": 1.66}
+{"type": "partial", "text": "Please open your Bibles with a few", "seg": 2, "at": 9.52}
+{"type": "partial", "text": "Please open your Bibles with me to the Gospel of Juh", "seg": 2, "at": 10.8}
+{"type": "partial", "text": "Please open your Bibles with me to the Gospel of John. Chapter th", "seg": 2, "at": 12.01}
+{"type": "partial", "text": "Please open your Bibles with me to the Gospel of John, Chapter 3.", "seg": 2, "at": 14.2}
+{"type": "line", "id": 3, "seg": 2, "src": "Please open your Bibles with me to the Gospel of John, Chapter 3.", "start": 5.0, "end": 10.99, "at": 15.48, "lag": 4.49, "keepDraft": false}
+{"type": "translation", "id": 3, "lang": "th", "dst": "โปรดเปิดไบเบิลของคุณกับผมในพระวจนะของยอห์น บทที่ 3", "at": 20.83, "lag": 9.84, "mtSec": 5.35}
+{"type": "translation", "id": 3, "lang": "zh", "dst": "请和我一起打开圣经，看约翰福音第三章。", "at": 20.83, "lag": 9.84, "mtSec": 5.35}
+{"type": "partial", "text": "Jesus is talking with a man.", "seg": 3, "at": 15.48}
+{"type": "partial", "text": "Jesus is talking with a man named Nicodemus. soon.", "seg": 3, "at": 17.6}
+{"type": "partial", "text": "Jesus is talking with a man named Nicodemus, a teacher who came to him at night.", "seg": 3, "at": 19.94}
+{"type": "line", "id": 4, "seg": 3, "src": "Jesus is talking with a man named Nicodemus, a teacher who came to him at night.", "start": 10.99, "end": 17.61, "at": 21.23, "lag": 3.62, "keepDraft": false}
+{"type": "translation", "id": 4, "lang": "th", "dst": "พระเยซูพูดกับนิโกรดมัสผู้สอนที่มาหาพระองค์ในกลางคืน", "at": 27.21, "lag": 9.6, "mtSec": 5.97}
+{"type": "translation", "id": 4, "lang": "zh", "dst": "耶稣正在和一个叫尼哥底马的老师说话。", "at": 27.21, "lag": 9.6, "mtSec": 5.97}
+{"type": "partial", "text": "Nicodemus...", "seg": 4, "at": 21.23}
+{"type": "partial", "text": "Nikodemus had questions.", "seg": 4, "at": 22.39}
+{"type": "partial", "text": "Nicodemus had questions, and Jesus did not.", "seg": 4, "at": 24.65}
+{"type": "line", "id": 5, "seg": 4, "src": "Nicodemus had questions, and Jesus did not send him away.", "start": 19.3, "end": 23.06, "at": 26.94, "lag": 3.88, "keepDraft": false}
+{"type": "translation", "id": 5, "lang": "th", "dst": "นิโคเดมัสมีคำถามและพระเยซูไม่ส่งเขาออกไป", "at": 33.75, "lag": 10.69, "mtSec": 6.54}
+{"type": "translation", "id": 5, "lang": "zh", "dst": "尼哥底摩有问题，耶稣没有把他赶走。", "at": 33.75, "lag": 10.69, "mtSec": 6.54}
+{"type": "partial", "text": "", "seg": 5, "at": 26.94}
+{"type": "partial", "text": "That is the first thing I want you to see.", "seg": 5, "at": 28.83}
+{"type": "partial", "text": "That is the first thing I want you to see this morning. You can...", "seg": 5, "at": 30.73}
+{"type": "line", "id": 6, "seg": 5, "src": "That is the first thing I want you to see this morning.", "start": 24.51, "end": 27.35, "at": 32.73, "lag": 5.38, "keepDraft": false}
+{"type": "translation", "id": 6, "lang": "th", "dst": "นั่นคือสิ่งแรกที่ฉันอยากให้คุณเห็นในตอนเช้านี้", "at": 37.34, "lag": 9.99, "mtSec": 3.6}
+{"type": "translation", "id": 6, "lang": "zh", "dst": "这就是我今天早上想要你看到的第一件事。", "at": 37.34, "lag": 9.99, "mtSec": 3.6}
+{"type": "partial", "text": "You can bring your questions to God.", "seg": 6, "at": 32.73}
+{"type": "line", "id": 7, "seg": 6, "src": "You can bring your questions to God.", "start": 28.5, "end": 30.29, "at": 34.61, "lag": 4.32, "keepDraft": false}
+{"type": "translation", "id": 7, "lang": "th", "dst": "คุณสามารถนำคำถามของคุณไปยังพระเจ้า", "at": 39.13, "lag": 8.84, "mtSec": 1.79}
+{"type": "translation", "id": 7, "lang": "zh", "dst": "您可以向上帝提出问题。", "at": 39.13, "lag": 8.84, "mtSec": 1.79}
+{"type": "partial", "text": "In verse 16...", "seg": 7, "at": 34.61}
+{"type": "partial", "text": "In verse 16, Jesus says that", "seg": 7, "at": 36.86}
+{"type": "partial", "text": "In verse 16, Jesus says that God so loved the world that he gave his one. on", "seg": 7, "at": 40.03}
+{"type": "partial", "text": "In verse 16, Jesus says that God so loved the world that he gave his one and only son. Notice that the...", "seg": 7, "at": 41.34}
+{"type": "line", "id": 8, "seg": 7, "src": "In verse 16, Jesus says that God so loved the world that he gave his one and only son.", "start": 31.98, "end": 37.58, "at": 43.05, "lag": 5.47, "keepDraft": false}
+{"type": "translation", "id": 8, "lang": "th", "dst": "บทที่ 16 บอกว่าพระเจ้ารักโลกมากจนให้พระบุตรเดียวของพระองค์", "at": 46.81, "lag": 9.23, "mtSec": 3.77}
+{"type": "translation", "id": 8, "lang": "zh", "dst": "在第16节，耶稣说上帝如此爱世界，以至于献出他独生之子。", "at": 46.81, "lag": 9.23, "mtSec": 3.77}
+{"type": "partial", "text": "Notice that the verse begins with love.", "seg": 8, "at": 43.05}
+{"type": "line", "id": 9, "seg": 8, "src": "Notice that the verse begins with love.", "start": 39.16, "end": 41.14, "at": 45.0, "lag": 3.86, "keepDraft": false}
+{"type": "translation", "id": 9, "lang": "th", "dst": "พึงสังเกตว่า ข้อนี้เริ่มด้วยความรัก", "at": 50.04, "lag": 8.9, "mtSec": 3.22}
+{"type": "translation", "id": 9, "lang": "zh", "dst": "这段经文的开头是爱。", "at": 50.04, "lag": 8.9, "mtSec": 3.22}
+{"type": "partial", "text": "It does not. up.", "seg": 9, "at": 45.0}
+{"type": "partial", "text": "It does not begin with our success or our fail. really.", "seg": 9, "at": 46.25}
+{"type": "line", "id": 10, "seg": 9, "src": "It does not begin with our success or our failure.", "start": 42.0, "end": 44.9, "at": 46.99, "lag": 2.09, "keepDraft": false}
+{"type": "translation", "id": 10, "lang": "th", "dst": "มันไม่ได้เริ่มด้วยความสำเร็จหรือความล้มเหลวของเรา", "at": 51.58, "lag": 6.68, "mtSec": 1.54}
+{"type": "translation", "id": 10, "lang": "zh", "dst": "它不是从我们的成功或失败开始的。", "at": 51.58, "lag": 6.68, "mtSec": 1.54}
+{"type": "partial", "text": "", "seg": 10, "at": 46.99}
+{"type": "partial", "text": "Some of you f-ing", "seg": 10, "at": 48.37}
+{"type": "partial", "text": "Some of you came here tired.", "seg": 10, "at": 49.03}
+{"type": "partial", "text": "Some of you came here tired this week.", "seg": 10, "at": 50.6}
+{"type": "line", "id": 11, "seg": 10, "src": "Some of you came here tired this week.", "start": 46.35, "end": 48.67, "at": 51.29, "lag": 2.62, "keepDraft": false}
+{"type": "translation", "id": 11, "lang": "th", "dst": "พวกคุณบางคนมาที่นี่เหนื่อยสัปดาห์นี้", "at": 53.9, "lag": 5.23, "mtSec": 2.32}
+{"type": "translation", "id": 11, "lang": "zh", "dst": "你们中的一些人本周来这里很累。", "at": 53.9, "lag": 5.23, "mtSec": 2.32}
+{"type": "partial", "text": "Some of you came...", "seg": 11, "at": 51.29}
+{"type": "partial", "text": "Some of you came here carrying great.", "seg": 11, "at": 52.76}
+{"type": "partial", "text": "Some of you came here carrying grief.", "seg": 11, "at": 53.44}
+{"type": "line", "id": 12, "seg": 11, "src": "Some of you came here carrying grief.", "start": 49.53, "end": 51.63, "at": 54.92, "lag": 3.29, "keepDraft": false}
+{"type": "translation", "id": 12, "lang": "th", "dst": "บางคนในหมู่พวกคุณมาพร้อมกับความเศร้าโศก", "at": 57.6, "lag": 5.97, "mtSec": 2.68}
+{"type": "translation", "id": 12, "lang": "zh", "dst": "你们中的一些人带着悲伤来到这里。", "at": 57.6, "lag": 5.97, "mtSec": 2.68}
+{"type": "partial", "text": "Here this...", "seg": 12, "at": 54.92}
+{"type": "partial", "text": "Here this clearly.", "seg": 12, "at": 57.0}
+{"type": "line", "id": 13, "seg": 12, "src": "Here this clearly.", "start": 51.63, "end": 54.12, "at": 58.16, "lag": 4.04, "keepDraft": false}
+{"type": "translation", "id": 13, "lang": "th", "dst": "ตรงนี้ชัดเจน", "at": 59.27, "lag": 5.15, "mtSec": 1.11}
+{"type": "translation", "id": 13, "lang": "zh", "dst": "这里很清楚。", "at": 59.27, "lag": 5.15, "mtSec": 1.11}
+{"type": "partial", "text": "The love of God is not a reward.", "seg": 13, "at": 58.16}
+{"type": "partial", "text": "The love of God is not a reward for good people. 7", "seg": 13, "at": 60.26}
+{"type": "line", "id": 14, "seg": 13, "src": "The love of God is not a reward for good people.", "start": 54.12, "end": 57.79, "at": 61.57, "lag": 3.78, "keepDraft": false}
+{"type": "translation", "id": 14, "lang": "th", "dst": "ความรักของพระเจ้าไม่ใช่รางวัลสำหรับคนดี", "at": 64.15, "lag": 6.36, "mtSec": 2.59}
+{"type": "translation", "id": 14, "lang": "zh", "dst": "对于善人来说，上帝的爱不是奖励。", "at": 64.15, "lag": 6.36, "mtSec": 2.59}
+{"type": "partial", "text": "It is a gift for all people.", "seg": 14, "at": 61.57}
+{"type": "line", "id": 15, "seg": 14, "src": "It is a gift for all people.", "start": 57.79, "end": 60.39, "at": 63.61, "lag": 3.22, "keepDraft": false}
+{"type": "translation", "id": 15, "lang": "th", "dst": "มันเป็นของขวัญสำหรับทุกคน", "at": 65.09, "lag": 4.7, "mtSec": 0.94}
+{"type": "translation", "id": 15, "lang": "zh", "dst": "它是所有人的礼物。", "at": 65.09, "lag": 4.7, "mtSec": 0.94}
+{"type": "partial", "text": "", "seg": 15, "at": 63.61}
+{"type": "partial", "text": "So when we leave this building to be a good friend, we can't be a good friend.", "seg": 15, "at": 65.04}
+{"type": "partial", "text": "So when we leave this building today, let us care. here.", "seg": 15, "at": 66.27}
+{"type": "partial", "text": "So when we leave this building today, let us carry that love into Chiang.", "seg": 15, "at": 67.59}
+{"type": "line", "id": 16, "seg": 15, "src": "So when we leave this building today, let us carry that love into Chiang Mai.", "start": 61.86, "end": 66.4, "at": 69.04, "lag": 2.64, "keepDraft": false}
+{"type": "translation", "id": 16, "lang": "th", "dst": "ดังนั้น เมื่อเราออกจากอาคารนี้ในวันนี้ ขอให้เรานำความรักนั้น เข้าสู่เชียงใหม่", "at": 71.76, "lag": 5.37, "mtSec": 2.72}
+{"type": "translation", "id": 16, "lang": "zh", "dst": "所以当我们今天离开这座大楼时，让我们把爱带到迈。", "at": 71.76, "lag": 5.37, "mtSec": 2.72}
+{"type": "partial", "text": "", "seg": 16, "at": 69.04}
+{"type": "partial", "text": "Let us be patient.", "seg": 16, "at": 69.72}
+{"type": "partial", "text": "Let us be patient with our families.", "seg": 16, "at": 72.26}
+{"type": "partial", "text": "Let us be patient with our families, honest at work, and...", "seg": 16, "at": 72.98}
+{"type": "draft", "seg": 16, "lang": "th", "text": "ขอให้เรามีความอดทนกับครอบครัวของเรา", "src": "Let us be patient with our families,", "at": 73.7}
+{"type": "draft", "seg": 16, "lang": "zh", "text": "我们要对待家人有耐心，", "src": "Let us be patient with our families,", "at": 73.7}
+{"type": "partial", "text": "Let us be patient with our families, honest at work, and kind to stranger.", "seg": 16, "at": 73.98}
+{"type": "draft", "seg": 16, "lang": "th", "text": "ขอให้เรามีความอดทนกับครอบครัวของเรา ซื่อสัตย์ในงาน และ", "src": "Let us be patient with our families, honest at work, and", "at": 75.08}
+{"type": "draft", "seg": 16, "lang": "zh", "text": "我们要对待家人有耐心，在工作中诚实，", "src": "Let us be patient with our families, honest at work, and", "at": 75.08}
+{"type": "partial", "text": "Let us be patient with our families, honest at work, and kind to strangers.", "seg": 16, "at": 74.98}
+{"type": "line", "id": 17, "seg": 16, "src": "Let us be patient with our families, honest at work, and kind to strangers.", "start": 66.4, "end": 72.94, "at": 76.0, "lag": 3.06, "keepDraft": true}
+{"type": "translation", "id": 17, "lang": "th", "dst": "ให้เราอดทนกับครอบครัวของเรา ซื่อสัตย์ในงาน และมีเมตตาต่อคนแปลกหน้า", "at": 83.95, "lag": 11.01, "mtSec": 7.95}
+{"type": "translation", "id": 17, "lang": "zh", "dst": "我们要对待家人有耐心，在工作中诚实，善待陌生人。", "at": 83.95, "lag": 11.01, "mtSec": 7.95}
+{"type": "partial", "text": "Let us...", "seg": 17, "at": 76.0}
+{"type": "partial", "text": "Let us pray together before.", "seg": 17, "at": 76.92}
+{"type": "partial", "text": "Let us pray together before we sing.", "seg": 17, "at": 78.03}
+{"type": "line", "id": 18, "seg": 17, "src": "Let us pray together before we sing.", "start": 74.51, "end": 76.89, "at": 78.93, "lag": 2.04, "keepDraft": false}
+{"type": "translation", "id": 18, "lang": "th", "dst": "ขอให้เราอธิษฐานด้วยกัน ก่อนที่จะร้องเพลง", "at": 85.32, "lag": 8.43, "mtSec": 1.37}
+{"type": "translation", "id": 18, "lang": "zh", "dst": "让我们在唱歌之前一起祈祷。", "at": 85.32, "lag": 8.43, "mtSec": 1.37}
+{"type": "partial", "text": "", "seg": 18, "at": 78.93}
+{"type": "partial", "text": "", "seg": 18, "at": 79.82}
+{"type": "summary", "model": "base.en", "audioSec": 78.5, "asrBusySec": 75.2, "realtimeFactor": 0.96, "lines": 18, "src": "en", "tgts": ["th", "zh"]}
