@@ -104,14 +104,14 @@ jobs:
           "$APP" --ui none --port 5390 > app.log 2>&1 &
           pid=$!
           for i in $(seq 1 60); do curl -sf http://127.0.0.1:5390/api/state > /dev/null && break; sleep 1; done
-          curl -sf http://127.0.0.1:5390/ | grep -q "Riah Church Translate"
-          curl -sf http://127.0.0.1:5390/screen | grep -q 'id="rows"'
-          curl -sf http://127.0.0.1:5390/vendor/riah-interface.css | grep -q "riah"
-          curl -sf http://127.0.0.1:5390/licenses.html | grep -q "NLLB"
-          curl -sf http://127.0.0.1:5390/THIRD-PARTY-NOTICES.txt | grep -q "ctranslate2"
-          curl -sf http://127.0.0.1:5390/type/type.css | grep -q "Sarabun"
+          curl -sf http://127.0.0.1:5390/ | grep "Riah Church Translate" > /dev/null
+          curl -sf http://127.0.0.1:5390/screen | grep 'id="rows"' > /dev/null
+          curl -sf http://127.0.0.1:5390/vendor/riah-interface.css | grep "riah" > /dev/null
+          curl -sf http://127.0.0.1:5390/licenses.html | grep "NLLB" > /dev/null
+          curl -sf http://127.0.0.1:5390/THIRD-PARTY-NOTICES.txt | grep "ctranslate2" > /dev/null
+          curl -sf http://127.0.0.1:5390/type/type.css | grep "Sarabun" > /dev/null
           curl -sf -o /dev/null http://127.0.0.1:5390/type/sarabun-thai-600-normal.woff2
-          curl -sf http://127.0.0.1:5390/api/state | grep -q '"hidden": false'
+          curl -sf http://127.0.0.1:5390/api/state | grep '"hidden": false' > /dev/null
           # The speech engine must be running in its own process in the built app, not the in-app fallback
           engine_mode() { curl -sf http://127.0.0.1:5390/api/state | grep -o '"engine": "[a-z]*"' || true; }
           for i in $(seq 1 90); do [ "$(engine_mode)" = '"engine": "process"' ] && break; sleep 1; done
