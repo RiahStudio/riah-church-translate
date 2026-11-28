@@ -101,11 +101,12 @@ def _worker(conn, opts):
 
     def beat():
         while True:
-            try:
+            g = gen[0]                     # read before health(): a Start landing in between must not make an
+            try:                           # idle reading look like the new service already ended
                 h = engine.health()
             except Exception:
                 h = dict(running=False, live=False, restart=False, overdue=0.0)
-            send(("hb", gen[0], h))
+            send(("hb", g, h))
             time.sleep(HB_EVERY)
     threading.Thread(target=beat, daemon=True).start()
 
@@ -221,6 +222,12 @@ class EngineProxy:
                 self.gen += 1                              # heartbeats from before this are not about now
                 if self._alive():
                     self._send(("stop",))
+                else:
+                    # Between engine processes (one had just stopped and the next was due): there is no
+                    # engine to say "stopped", so say it here, or the page would stay on "reconnecting".
+                    self._say("stopped", "Stopped.")
+                    self._warm_again()
+                    return
         if inline is not None:
             return inline.stop()
         end = asked + self.stop_wait
@@ -241,6 +248,9 @@ class EngineProxy:
         with self.lock:
             if self.inline is not None:
                 return self.inline.restart()
+            if self.wanted and self.respawn_due is not None:
+                self.respawn_due = time.monotonic()  # in the pause before a new engine process: try now
+                return True
             if not (self.wanted and self._alive()):
                 return False                       # (the engine itself ignores it if it isn't live yet)
             self.restart_at = time.monotonic()

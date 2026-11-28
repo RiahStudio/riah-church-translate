@@ -425,7 +425,11 @@ class Engine:
         return ", ".join(p for p in (theirs.strip(" ,"), (mine or "").strip(" ,")) if p)
 
     def _status(self, state, detail=""):
-        self.progress()
+        # A status line is a sign of life, but it never shortens an allowance already given for a slow
+        # step: "Loading the speech model…" during a reload mid-service must not leave that load only
+        # the live loop's 45 s.
+        self._deadline = max(self._deadline,
+                             time.monotonic() + (STALL_LIVE if self._live else STALL_LOAD))
         self.hub.publish(dict(type="status", state=state, detail=detail))
         report.status(state)
 
@@ -506,6 +510,7 @@ class Engine:
                 raise ValueError(f"{S['name']} can be shown as a translation, but the app can't listen to it yet.")
             asr_threads, mt_threads = _threads()
             self._status("loading", "Getting ready…")
+            self.progress(STALL_LOAD)  # also when starting again after a problem mid-service: loading may be slow
             device = cfg.get("device", "cpu")
             model_name = cfg.get("model") or choose_whisper(src_code, device, asr_threads, on_status=self._status)
             model = load_whisper(model_name, device, asr_threads, on_status=self._status)

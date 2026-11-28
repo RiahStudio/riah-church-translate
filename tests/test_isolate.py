@@ -218,6 +218,55 @@ def test_a_process_that_crashes_every_time_backs_off_and_still_recovers():
         r.close()
 
 
+def _wait_for_a_pause(r, at_least=0.0, secs=90):
+    """Until the proxy is between engine processes (the last one crashed, the next is due later). The
+    pauses grow 0.3, 0.3, 1, 2, 4 s, and a busy computer can take seconds to start each process."""
+    def paused():
+        with r.p.lock:
+            due = r.p.respawn_due
+            return due is not None and due - time.monotonic() > at_least
+    wait_for(paused, secs, "a pause between engine processes")
+
+
+def test_stop_between_engine_processes_says_stopped():
+    """Stop pressed while the engine is between processes: the page must not stay on 'reconnecting'."""
+    r = Rig()
+    try:
+        r.mode("crash_on_start")
+        r.start()
+        _wait_for_a_pause(r, 0.5)
+        t = time.monotonic()
+        r.p.stop()
+        assert time.monotonic() - t < 1, "nothing to wait for"
+        assert not r.p.running and r.states()[-1] == "stopped", r.states()[-3:]
+        spawns = r.spawns
+        time.sleep(3)
+        assert r.spawns <= spawns + 1 and not r.p.running, "after Stop nothing keeps restarting"
+        r.mode("ok")
+        r.start()
+        r.more_lines(3, 30)
+    finally:
+        r.close()
+
+
+def test_restart_in_the_pause_tries_again_at_once():
+    """A crash loop waits longer each time; the sound person's Restart cuts the wait short."""
+    r = Rig()
+    r.p.backoff_cap = 30
+    try:
+        r.mode("crash_on_start")
+        r.start()
+        _wait_for_a_pause(r, 3)
+        r.mode("ok")
+        spawns = r.spawns
+        assert r.p.restart() is True
+        wait_for(lambda: r.spawns > spawns, 1.5, "a new engine process at once")
+        r.more_lines(3, 30)
+        assert r.states()[-1] == "listening"
+    finally:
+        r.close()
+
+
 def test_a_service_that_cannot_start_ends_with_its_message():
     r = Rig()
     try:

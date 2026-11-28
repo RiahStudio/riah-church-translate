@@ -488,6 +488,41 @@ def test_notes_and_layout_api():
     assert moved == ["bar"] and hub.display["layout"] == "bar" and fake.settings.data["display"]["layout"] == "bar"
 
 
+def test_settings_never_stop_a_start():
+    """A full or locked disk costs remembering the settings, never the Start; a refused value doesn't stick."""
+    import json
+    import tempfile
+    import types
+    from pathlib import Path
+    from riah_translate.app import App, Settings
+    with tempfile.TemporaryDirectory() as d:
+        st = Settings.__new__(Settings)
+        st.data, st.glossary = dict(src="en", tgts=["th"]), dict(hints="", fix={})
+        st.path, st.gpath = Path(d) / "settings.json", Path(d) / "glossary.json"
+        st.save()
+        assert json.loads(st.path.read_text(encoding="utf-8"))["tgts"] == ["th"]
+        assert not list(Path(d).glob("*.new")), "the whole file is swapped in, nothing left over"
+        st.path = Path(d) / "no such folder" / "settings.json"
+        st.save()                                   # can't be written: says so in the log, no error
+
+        started = []
+        fake = types.SimpleNamespace(settings=st, hub=Hub(), args=types.SimpleNamespace(device="cpu", file=None),
+                                     engine=types.SimpleNamespace(start=started.append),
+                                     transcript=types.SimpleNamespace(begin=lambda *a: None),
+                                     _glossary=lambda: {})
+        st.data.update(input=None, channel=None, llmUrl="http://127.0.0.1:11434")
+        for bad in (dict(src="xx"), dict(tgts=["xx"]), dict(llmUrl="file:///etc/passwd")):
+            try:
+                App.start(fake, bad)
+                raise AssertionError(f"accepted {bad}")
+            except ValueError:
+                pass
+        assert st.data["src"] == "en" and st.data["tgts"] == ["th"] and st.data["llmUrl"].startswith("http://")
+        assert not started
+        assert App.start(fake, dict(tgts=["zh", "th"]))["ok"] and started[-1]["tgts"] == ["zh", "th"]
+        assert st.data["tgts"] == ["zh", "th"], "an accepted change is kept"
+
+
 def test_hostile_notes():
     """A notes file built to hang or swamp the computer is read quickly or turned away."""
     import io

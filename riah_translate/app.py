@@ -99,8 +99,16 @@ class Settings:
             self.data["tgts"] = [old]
 
     def save(self):
-        self.path.write_text(json.dumps(self.data, ensure_ascii=False, indent=2), encoding="utf-8")
-        self.gpath.write_text(json.dumps(self.glossary, ensure_ascii=False, indent=2), encoding="utf-8")
+        """Remember the settings for next time. Never stops anything: a full or locked disk costs the
+        remembering, not the Start. Each file is written whole and then swapped in, so the app being
+        closed (or the power going) mid-write can't leave half a file behind."""
+        for p, data in ((self.path, self.data), (self.gpath, self.glossary)):
+            tmp = p.with_name(p.name + ".new")
+            try:
+                tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+                os.replace(tmp, p)
+            except OSError as e:
+                print(f"Settings not saved ({p.name}): {e}", flush=True)
 
 
 class App(Api):
@@ -175,7 +183,8 @@ class App(Api):
         return church_glossary(mine)
 
     def start(self, body):
-        s = self.settings.data
+        # Checked on a copy first: a value that is refused must not stay behind and spoil the next Start.
+        s = dict(self.settings.data)
         for k in ("src", "tgts", "input", "channel", "mt", "model", "llmModel", "llmUrl", "churchWords", "voice"):
             if k in body:
                 s[k] = body[k]
@@ -185,6 +194,8 @@ class App(Api):
         if s["src"] not in LANGS:
             raise ValueError("Unknown language")
         s["tgts"] = clean_tgts(s["src"], s["tgts"])
+        self.settings.data.update(s)
+        s = self.settings.data
         self.settings.save()
         self.hub.publish(dict(type="langs", src=s["src"], tgts=s["tgts"]))
         cfg = dict(s, glossary=self._glossary(), device=self.args.device, file=self.args.file)

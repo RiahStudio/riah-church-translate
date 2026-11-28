@@ -466,9 +466,11 @@
   // A newer dated version is out: a quiet line with one click to the download page. The app asks GitHub once,
   // in the background, a few seconds after it opens, so look again shortly after boot.
   let updateDismissed = false;
+  let updateUrl = "https://riahstudio.com/churchtranslate/";
   function showUpdate(u) {
     const note = $("updateNote");
     if (!u || !u.version || updateDismissed) { note.hidden = true; return; }
+    if (u.url) updateUrl = u.url;
     $("updateText").textContent = `A newer version (${u.version}) is out.`;
     note.hidden = false;
   }
@@ -479,7 +481,11 @@
         fetch("/api/state").then((r) => r.json()).then((st) => showUpdate(st.update)).catch(() => {});
       }, secs * 1000);
     }
-    $("updateGo").addEventListener("click", () => { post("/api/open-update").catch(() => {}); });
+    $("updateGo").addEventListener("click", () => {
+      post("/api/open-update").catch(() => {
+        $("updateText").textContent = `Couldn't open the browser. The new version is at ${updateUrl}`;
+      });
+    });
     $("updateLater").addEventListener("click", () => { updateDismissed = true; $("updateNote").hidden = true; });
   }
 
